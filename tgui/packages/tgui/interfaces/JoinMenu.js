@@ -12,7 +12,7 @@ import { Window } from '../layouts';
 import { createSearch, decodeHtmlEntities } from 'common/string';
 import { logger } from '../logging';
 
-export const ShipSelect = (props, context) => {
+export const JoinMenu = (props, context) => {
   const { act, data } = useBackend(context);
 
   const ships = data.ships || {};
@@ -34,11 +34,8 @@ export const ShipSelect = (props, context) => {
   const [shownTabs, setShownTabs] = useLocalState(context, 'tabs', [
     { name: 'Ship Select', tab: 1 },
     { name: 'Ship Purchase', tab: 3 },
+    { name: 'Outpost', tab: 4 },
   ]);
-  const searchFor = (searchText) =>
-    createSearch(searchText, (thing) => thing.name);
-
-  const [searchText, setSearchText] = useLocalState(context, 'searchText', '');
 
   return (
     <Window title="Ship Select" width={800} height={600} resizable>
@@ -215,105 +212,109 @@ export const ShipSelect = (props, context) => {
             </Section>
           </>
         )}
-        {currentTab === 3 && (
-          <Section
-            title="Ship Purchase"
-            buttons={
-              <>
-                <Input
-                  placeholder="Search..."
-                  autoFocus
-                  value={searchText}
-                  onInput={(_, value) => setSearchText(value)}
-                />
-                <Button
-                  content="Back"
-                  onClick={() => {
-                    setCurrentTab(1);
-                  }}
-                />
-              </>
-            }
-          >
-            {templates.filter(searchFor(searchText)).map((template) => (
-              <Collapsible
-                title={template.name}
-                key={template.name}
-                color={
-                  (!data.shipSpawnAllowed && 'average') ||
-                  ((template.curNum >= template.limit ||
-                    (!data.autoMeet && data.playMin < template.minTime)) &&
-                    'grey') ||
-                  'default'
-                }
-                buttons={
-                  <Button
-                    content="Buy"
-                    tooltip={
-                      (!data.shipSpawnAllowed &&
-                        'No more ships may be spawned at this time.') ||
-                      (template.curNum >= template.limit &&
-                        'There are too many ships of this type.') ||
-                      (!data.autoMeet &&
-                        data.playMin < template.minTime &&
-                        'You do not have enough playtime to buy this ship.') ||
-                      (data.shipSpawning &&
-                        'A ship is currently spawning. Please wait.')
-                    }
-                    disabled={
-                      !data.shipSpawnAllowed ||
-                      data.shipSpawning ||
-                      template.curNum >= template.limit ||
-                      (!data.autoMeet && data.playMin < template.minTime)
-                    }
-                    onClick={() => {
-                      act('buy', {
-                        name: template.name,
-                      });
-                    }}
-                  />
-                }
-              >
-                <LabeledList>
-                  <LabeledList.Item label="Description">
-                    {template.desc || 'No Description'}
-                  </LabeledList.Item>
-                  <LabeledList.Item label="Ship Faction">
-                    {template.faction}
-                  </LabeledList.Item>
-                  <LabeledList.Item label="Ship Tags">
-                    {(template.tags && template.tags.join(', ')) ||
-                      'No Tags Set'}
-                  </LabeledList.Item>
-                  <LabeledList.Item label="Std. Crew">
-                    {template.crewCount}
-                  </LabeledList.Item>
-                  <LabeledList.Item label="Max #">
-                    {template.limit}
-                  </LabeledList.Item>
-                  <LabeledList.Item label="Min. Playtime">
-                    {formatShipTime(
-                      template.minTime,
-                      data.playMin,
-                      data.autoMeet
-                    )}
-                  </LabeledList.Item>
-                  <LabeledList.Item label="Wiki Link">
-                    <a
-                      href={'https://shiptest.net/wiki/' + template.name}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Here
-                    </a>
-                  </LabeledList.Item>
-                </LabeledList>
-              </Collapsible>
-            ))}
-          </Section>
-        )}
+        {currentTab === 3 && <ShipPurchase />}
       </Window.Content>
     </Window>
+  );
+};
+
+const ShipPurchase = (props, context) => {
+  const { act, data } = useBackend(context);
+  const { ships, templates } = data;
+
+  const searchFor = (searchText) =>
+    createSearch(searchText, (thing) => thing.name);
+
+  const [searchText, setSearchText] = useLocalState(context, 'searchText', '');
+  return (
+    <Section
+      title="Ship Purchase"
+      buttons={
+        <>
+          <Input
+            placeholder="Search..."
+            autoFocus
+            value={searchText}
+            onInput={(_, value) => setSearchText(value)}
+          />
+          <Button
+            content="Back"
+            onClick={() => {
+              setCurrentTab(1);
+            }}
+          />
+        </>
+      }
+    >
+      {templates.filter(searchFor(searchText)).map((template) => (
+        <Collapsible
+          title={template.name}
+          key={template.name}
+          color={
+            (!data.shipSpawnAllowed && 'average') ||
+            ((template.curNum >= template.limit ||
+              (!data.autoMeet && data.playMin < template.minTime)) &&
+              'grey') ||
+            'default'
+          }
+          buttons={
+            <Button
+              content="Buy"
+              tooltip={
+                (!data.shipSpawnAllowed &&
+                  'No more ships may be spawned at this time.') ||
+                (template.curNum >= template.limit &&
+                  'There are too many ships of this type.') ||
+                (!data.autoMeet &&
+                  data.playMin < template.minTime &&
+                  'You do not have enough playtime to buy this ship.') ||
+                (data.shipSpawning &&
+                  'A ship is currently spawning. Please wait.')
+              }
+              disabled={
+                !data.shipSpawnAllowed ||
+                data.shipSpawning ||
+                template.curNum >= template.limit ||
+                (!data.autoMeet && data.playMin < template.minTime)
+              }
+              onClick={() => {
+                act('buy', {
+                  name: template.name,
+                });
+              }}
+            />
+          }
+        >
+          <LabeledList>
+            <LabeledList.Item label="Description">
+              {template.desc || 'No Description'}
+            </LabeledList.Item>
+            <LabeledList.Item label="Ship Faction">
+              {template.faction}
+            </LabeledList.Item>
+            <LabeledList.Item label="Ship Tags">
+              {(template.tags && template.tags.join(', ')) || 'No Tags Set'}
+            </LabeledList.Item>
+            <LabeledList.Item label="Std. Crew">
+              {template.crewCount}
+            </LabeledList.Item>
+            <LabeledList.Item label="Max #">{template.limit}</LabeledList.Item>
+            <LabeledList.Item label="Min. Playtime">
+              {formatShipTime(template.minTime, data.playMin, data.autoMeet)}
+            </LabeledList.Item>
+            <LabeledList.Item label="Wiki Link">
+              <a
+                href={'https://shiptest.net/wiki/' + template.name}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Here
+              </a>
+            </LabeledList.Item>
+          </LabeledList>
+        </Collapsible>
+      ))}
+    </Section>
   );
 };
 
