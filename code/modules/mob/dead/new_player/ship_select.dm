@@ -123,55 +123,55 @@
 	.["autoMeet"] = user.client && !user.client.is_playtime_restriction_eligible()
 	.["playMin"] = user.client ? user.client.get_exp_living(TRUE) : 0
 
-	for(var/datum/overmap/ship/controlled/S as anything in SSovermap.controlled_ships)
-		if(S.source_template)
-			if(!template_num_lookup[S.source_template])
-				template_num_lookup[S.source_template] = 1
+	for(var/datum/overmap/ship/controlled/shippy as anything in SSovermap.controlled_ships)
+		if(shippy.source_template)
+			if(!template_num_lookup[shippy.source_template])
+				template_num_lookup[shippy.source_template] = 1
 			else
-				template_num_lookup[S.source_template] += 1
-		if(!S.is_join_option())
+				template_num_lookup[shippy.source_template] += 1
+		if(!shippy.is_join_option())
 			continue
 
 		var/list/ship_jobs = list()
-		for(var/datum/job/job as anything in S.job_slots)
-			var/slots = S.job_slots[job]
+		for(var/datum/job/job as anything in shippy.job_slots)
+			var/slots = shippy.job_slots[job]
 			if(slots <= 0)
 				continue
 			ship_jobs += list(list(
 				"name" = job,
 				"slots" = slots,
-				"minTime" = job.officer ? S.source_template.get_req_officer_minutes() : 0,
+				"minTime" = job.officer ? shippy.source_template.get_req_officer_minutes() : 0,
 				"ref" = REF(job),
 			))
 
 		var/list/ship_data = list(
-			"name" = S.name,
-			"faction" = S.source_template.faction_name,
-			"class" = S.source_template.short_name,
-			"desc" = S.source_template.description,
-			"tags" = S.source_template.tags,
-			"memo" = S.memo,
+			"name" = shippy.name,
+			"faction" = shippy.source_template.faction_name,
+			"class" = shippy.source_template.short_name,
+			"desc" = shippy.source_template.description,
+			"tags" = shippy.source_template.tags,
+			"memo" = shippy.memo,
 			"jobs" = ship_jobs,
-			"manifest" = S.manifest,
-			"joinMode" = S.join_mode,
-			"ref" = REF(S)
+			"manifest" = shippy.manifest,
+			"joinMode" = shippy.join_mode,
+			"ref" = REF(shippy)
 		)
 
 		.["ships"] += list(ship_data)
 
 	.["templates"] = list()
 	for(var/template_name as anything in SSmapping.ship_purchase_list)
-		var/datum/map_template/shuttle/T = SSmapping.ship_purchase_list[template_name]
-		if(!T.enabled)
+		var/datum/map_template/shuttle/ship_template = SSmapping.ship_purchase_list[template_name]
+		if(!ship_template.enabled)
 			continue
 		var/list/ship_data = list(
-			"name" = T.name,
-			"faction" = T.faction_name,
-			"desc" = T.description,
-			"tags" = T.tags,
-			"crewCount" = length(T.job_slots),
-			"limit" = T.limit,
-			"curNum" = template_num_lookup[T] || 0,
-			"minTime" = T.get_req_spawn_minutes(),
+			"name" = ship_template.name,
+			"faction" = ship_template.faction_name,
+			"desc" = ship_template.description,
+			"tags" = ship_template.tags,
+			"crewCount" = length(ship_template.job_slots),
+			"limit" = ship_template.limit,
+			"curNum" = template_num_lookup[ship_template] || 0,
+			"minTime" = ship_template.get_req_spawn_minutes(),
 		)
 		.["templates"] += list(ship_data)
