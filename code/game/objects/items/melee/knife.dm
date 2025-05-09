@@ -1,7 +1,8 @@
 /obj/item/melee/knife
 	icon_state = "kitchenknife"
 	item_state = "kitchenknife"
-	icon = 'icons/obj/weapon/knife.dmi'
+	icon = 'icons/obj/weapon/knives/knife.dmi'
+	world_file = 'icons/obj/weapon/knives/knife_world.dmi'
 	lefthand_file = 'icons/mob/inhands/weapons/knifes_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/knifes_righthand.dmi'
 	pickup_sound =  'sound/items/handling/knife1_pickup.ogg'
@@ -14,12 +15,13 @@
 	throw_speed = 3
 	throw_range = 6
 	custom_materials = list(/datum/material/iron=12000)
+	attack_cooldown = LIGHT_WEAPON_CD
 	attack_verb = list("slashed", "stabbed", "sliced", "torn", "ripped", "diced", "cut")
 	sharpness = IS_SHARP_ACCURATE
 	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50)
 	item_flags = EYE_STAB
 	tool_behaviour = TOOL_KNIFE
-
+	demolition_mod = 0.75
 
 /obj/item/melee/knife/ComponentInitialize()
 	. = ..()
@@ -52,14 +54,14 @@
 /obj/item/melee/knife/plastic/afterattack(mob/living/carbon/user)
 	.=..()
 	if(prob(break_chance))
-		user.visible_message("<span class='danger'>[user]'s spoon snaps into tiny pieces in their hand.</span>")
+		user.visible_message(span_danger("[user]'s spoon snaps into tiny pieces in their hand."))
 		qdel(src)
 
 
 /obj/item/melee/knife/plastic/afterattack(mob/living/carbon/user)
 	.=..()
 	if(prob(break_chance))
-		user.visible_message("<span class='danger'>[user]'s knife snaps into tiny pieces in their hand.</span>")
+		user.visible_message(span_danger("[user]'s knife snaps into tiny pieces in their hand."))
 		qdel(src)
 
 /obj/item/melee/knife/pizza_cutter
@@ -83,6 +85,7 @@
 	force = 15
 	throwforce = 10
 	custom_materials = list(/datum/material/iron=18000)
+	attack_cooldown = CLICK_CD_MELEE
 	attack_verb = list("cleaved", "slashed", "stabbed", "sliced", "torn", "ripped", "diced", "cut")
 	w_class = WEIGHT_CLASS_NORMAL
 	custom_price = 600
@@ -105,7 +108,6 @@
 	force = 20
 	throwforce = 20
 	attack_verb = list("slashed", "stabbed", "sliced", "torn", "ripped", "cut")
-	world_file = 'icons/obj/world/melee.dmi'
 
 /obj/item/melee/knife/survival
 	name = "survival knife"
@@ -116,7 +118,6 @@
 	force = 15
 	throwforce = 15
 	attack_verb = list("slashed", "stabbed", "sliced", "torn", "ripped", "cut")
-	world_file = 'icons/obj/world/melee.dmi'
 
 /obj/item/melee/knife/bone
 	name = "bone dagger"
@@ -126,10 +127,9 @@
 	righthand_file = 'icons/mob/inhands/weapons/swords_righthand.dmi'
 	desc = "A sharpened bone. The bare minimum in survival."
 	embedding = list("pain_mult" = 4, "embed_chance" = 35, "fall_chance" = 10)
-	force = 15
+	force = 10
 	throwforce = 15
 	custom_materials = null
-	world_file = 'icons/obj/world/melee.dmi'
 
 /obj/item/melee/knife/combat/cyborg
 	name = "cyborg knife"
@@ -164,10 +164,12 @@
 	icon_state = "switchblade"
 	lefthand_file = 'icons/mob/inhands/weapons/swords_lefthand.dmi'
 	righthand_file = 'icons/mob/inhands/weapons/swords_righthand.dmi'
+	world_file = null
 	desc = "A sharp, concealable, spring-loaded knife."
 	flags_1 = CONDUCT_1
 	force = 3
 	w_class = WEIGHT_CLASS_SMALL
+	sharpness = IS_BLUNT
 	throwforce = 5
 	throw_speed = 3
 	throw_range = 6
@@ -175,31 +177,24 @@
 	hitsound = 'sound/weapons/genhit.ogg'
 	attack_verb = list("stubbed", "poked")
 	resistance_flags = FIRE_PROOF
-	var/extended = 0
 
-/obj/item/melee/knife/switchblade/attack_self(mob/user)
-	extended = !extended
-	playsound(src.loc, 'sound/weapons/batonextend.ogg', 50, TRUE)
-	if(extended)
-		force = 20
-		w_class = WEIGHT_CLASS_NORMAL
-		throwforce = 23
-		icon_state = "switchblade_ext"
-		attack_verb = list("slashed", "stabbed", "sliced", "torn", "ripped", "diced", "cut")
-		hitsound = 'sound/weapons/bladeslice.ogg'
-		sharpness = IS_SHARP
-	else
-		force = 3
-		w_class = WEIGHT_CLASS_SMALL
-		throwforce = 5
-		icon_state = "switchblade"
-		attack_verb = list("stubbed", "poked")
-		hitsound = 'sound/weapons/genhit.ogg'
-		sharpness = IS_BLUNT
+/obj/item/melee/knife/switchblade/ComponentInitialize()
+	. = ..()
+	AddComponent( \
+		/datum/component/transforming, \
+		force_on = 20, \
+		throwforce_on = 23, \
+		throw_speed_on = 4, \
+		sharpness_on = IS_SHARP, \
+		hitsound_on = 'sound/weapons/bladeslice.ogg', \
+		w_class_on = WEIGHT_CLASS_NORMAL, \
+		attack_verb_on = list("slashed", "stabbed", "sliced", "torn", "ripped", "diced", "cut"), \
+	)
 
 /obj/item/melee/knife/letter_opener
 	name = "letter opener"
 	icon = 'icons/obj/items.dmi'
+	world_file = null
 	icon_state = "letter_opener"
 	desc = "A military combat utility survival knife."
 	embedding = list("pain_mult" = 4, "embed_chance" = 65, "fall_chance" = 10, "ignore_throwspeed_threshold" = TRUE)

@@ -79,7 +79,7 @@
 			return 0
 		return 1
 	else
-		message_admins("<span class='notice'>DEBUG: GAME STARTING WITHOUT PLAYER NUMBER CHECKS, THIS WILL PROBABLY BREAK SHIT.</span>")
+		message_admins(span_notice("DEBUG: GAME STARTING WITHOUT PLAYER NUMBER CHECKS, THIS WILL PROBABLY BREAK SHIT."))
 		return 1
 
 
@@ -149,7 +149,7 @@
 		message_admins("Convert_roundtype failed due to no valid modes to convert to. Please report this error to the Coders.")
 		return null
 
-	replacementmode = pickweight(usable_modes)
+	replacementmode = pick_weight(usable_modes)
 
 	var/matc = CONFIG_GET(number/midround_antag_time_check)
 	if(world.time >= (matc * 600))
@@ -196,7 +196,7 @@
 
 
 ///Called by the gameSSticker
-/datum/game_mode/process()
+/datum/game_mode/process(seconds_per_tick)
 	return 0
 
 //For things that do not die easily
@@ -272,7 +272,7 @@
 		reports += config.mode_reports[report_type]
 		Count++
 	for(var/i in Count to rand(3,5)) //Between three and five wrong entries on the list.
-		var/false_report_type = pickweightAllowZero(report_weights)
+		var/false_report_type = pick_weight_allow_zero(report_weights)
 		report_weights[false_report_type] = 0 //Make it so the same false report won't be selected twice
 		reports += config.mode_reports[false_report_type]
 

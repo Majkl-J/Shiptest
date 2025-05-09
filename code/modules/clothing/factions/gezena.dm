@@ -9,7 +9,7 @@
 	icon_state = "naval"
 	item_state = "bluejump"
 	supports_variations = DIGITIGRADE_VARIATION
-	armor = list("melee" = 10, "bullet" = 0, "laser" = 0,"energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 40)
+	armor = list("melee" = 0, "bullet" = 0, "laser" = 0,"energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 40)
 
 /obj/item/clothing/under/gezena/captain
 	name = "\improper Gezenan captain's navywear"
@@ -129,7 +129,7 @@
 	righthand_file = 'icons/mob/inhands/faction/gezena/gezena_righthand.dmi'
 	icon_state = "navalhat"
 	item_state = "bluecloth"
-	armor = list("melee" = 10, "bullet" = 10, "laser" = 10, "energy" = 10, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50)
+	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50)
 
 /obj/item/clothing/head/gezena/flap
 	name = "\improper PGFN Betzu-il cap"
@@ -203,13 +203,13 @@
 	icon_state = "navalgloves"
 	cold_protection = HANDS
 	min_cold_protection_temperature = GLOVES_MIN_TEMP_PROTECT
-	armor = list("melee" = 5, "bullet" = 5, "laser" = 5, "energy" = 5, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50)
+	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 50, "acid" = 50)
 
 /obj/item/clothing/gloves/gezena/marine
 	name = "\improper PGFMC Ihuz-irra Gloves"
 	desc = "As the name, “ihuz-irra”, or “sure-grip”, suggests, the gloves employed by the PGF military are designed to ensure the highest possible grip is maintained while also providing protection from blisters in work environments. Carries extra tactile grip on the fingertips for easy use of firearms."
 	icon_state = "marinegloves"
-	armor = list("melee" = 10, "bullet" = 10, "laser" = 10, "energy" = 10, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 75, "acid" = 50)
+	armor = list("melee" = 0, "bullet" = 0, "laser" = 0, "energy" = 0, "bomb" = 0, "bio" = 0, "rad" = 0, "fire" = 75, "acid" = 50)
 
 /obj/item/clothing/gloves/gezena/engi
 	name = "\improper PGFN Engineering Ihuz-irra Gloves"
@@ -245,6 +245,20 @@
 	item_state = "bluecloth"
 	unique_reskin = null
 
+/obj/item/storage/belt/military/gezena/bg16/PopulateContents()
+	. = ..()
+	for(var/i in 1 to 4)
+		new /obj/item/stock_parts/cell/gun/pgf(src)
+	new /obj/item/screwdriver(src)
+
+/obj/item/storage/belt/military/gezena/engineer/PopulateContents()
+	. = ..()
+	for(var/i in 1 to 2)
+		new /obj/item/stock_parts/cell/gun/pgf(src)
+	new /obj/item/screwdriver(src)
+	new /obj/item/grenade/c4
+	new /obj/item/grenade/c4
+
 /obj/item/storage/belt/medical/gezena
 	name = "\improper PGF Medical Iho-Usks"
 	desc = "The “iho-usks”, translating to “gear-holder”, is a lightweight harness covered in pouches, supplied to the ground troops of the PGF. This variant is designed for carrying medical supplies."
@@ -254,6 +268,17 @@
 	righthand_file = 'icons/mob/inhands/faction/gezena/gezena_righthand.dmi'
 	icon_state = "medpouches"
 	item_state = "whitecloth"
+
+/obj/item/storage/belt/medical/gezena/paramedic/PopulateContents()
+	new /obj/item/reagent_containers/medigel/styptic(src)
+	new /obj/item/reagent_containers/medigel/styptic(src)
+	new /obj/item/reagent_containers/medigel/silver_sulf(src)
+	new /obj/item/reagent_containers/medigel/silver_sulf(src)
+	new /obj/item/reagent_containers/medigel/synthflesh(src)
+	new /obj/item/stack/medical/gauze/twelve(src)
+	new /obj/item/stack/medical/splint(src)
+	. = ..()
+
 
 //Cloaks
 
@@ -266,6 +291,9 @@
 	righthand_file = 'icons/mob/inhands/faction/gezena/gezena_righthand.dmi'
 	icon_state = "cape"
 	item_state = "blackcloth"
+	supports_variations = VOX_VARIATION | KEPORI_VARIATION
+	vox_override_icon = 'icons/mob/clothing/faction/gezena/vox.dmi'
+	kepori_override_icon = 'icons/mob/clothing/faction/gezena/kepori.dmi'
 
 /obj/item/clothing/neck/cloak/gezena/lead
 	name = "marine officer's Azuilhauz"

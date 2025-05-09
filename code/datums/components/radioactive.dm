@@ -40,8 +40,8 @@
 	master.remove_filter("rad_glow")
 	return ..()
 
-/datum/component/radioactive/process()
-	if(!prob(50))
+/datum/component/radioactive/process(seconds_per_tick)
+	if(!SPT_PROB(50, seconds_per_tick))
 		return
 	radiation_pulse(parent, strength, RAD_DISTANCE_COEFFICIENT*2, FALSE, can_contaminate)
 	if(!hl3_release_date)
@@ -55,7 +55,6 @@
 	var/filter = master.get_filter("rad_glow")
 	if(filter)
 		animate(filter, alpha = 110, time = 15, loop = -1)
-		animate(alpha = 40, time = 25)
 
 /datum/component/radioactive/InheritComponent(datum/component/C, i_am_original, _strength, _source, _half_life, _can_contaminate)
 	if(!i_am_original)

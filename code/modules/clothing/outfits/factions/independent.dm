@@ -13,6 +13,7 @@
 	jobtype = /datum/job/assistant
 	job_icon = "assistant"
 
+	uniform = /obj/item/clothing/under/color/black
 	shoes = /obj/item/clothing/shoes/sneakers/black
 
 /datum/outfit/job/independent/assistant/waiter
@@ -26,19 +27,24 @@
 	l_pocket = /obj/item/lighter
 	r_pocket = /obj/item/reagent_containers/glass/rag
 
+/datum/outfit/job/independent/assistant/cheap //for Miskilamo ships
+	name = "Independent - Assistant (Low Budget)"
+
+	uniform = /obj/item/clothing/under/utility
+
 /datum/outfit/job/independent/assistant/waiter/post_equip(mob/living/carbon/human/H, visualsOnly = FALSE)
 	..()
 	if(visualsOnly)
 		return
-	var/obj/item/card/id/W = H.wear_id
+	var/obj/item/card/id/W = H.get_idcard()
 	W.access += list(ACCESS_KITCHEN)
 
-/datum/outfit/job/independent/assistant/fancy
-	name = "Independent - Assistant (Formal Uniform)"
+/datum/outfit/job/independent/assistant/fancy //for ISF ships
+	name = "Independent - Assistant (Fancy)"
 
 	shoes = /obj/item/clothing/shoes/laceup
-	uniform = /obj/item/clothing/under/misc/assistantformal
-	head = /obj/item/clothing/head/beret/grey
+	uniform = /obj/item/clothing/under/suit/charcoal
+	accessory = /obj/item/clothing/accessory/waistcoat
 
 /datum/outfit/job/independent/assistant/pirate
 	name = "Independent - Assistant (Pirate)"
@@ -107,6 +113,22 @@
 	gloves = /obj/item/clothing/gloves/color/white //poverty gloves
 	shoes = /obj/item/clothing/shoes/sneakers/brown
 
+/datum/outfit/job/independent/captain/merc
+	name = "Independent - Captain (Mercenary)"
+
+	uniform = /obj/item/clothing/under/syndicate
+	head = /obj/item/clothing/head/beret
+	gloves = /obj/item/clothing/gloves/combat
+	shoes = /obj/item/clothing/shoes/combat
+	suit = /obj/item/clothing/suit/armor/vest
+
+	accessory = null
+
+	backpack = /obj/item/storage/backpack/security
+	satchel = /obj/item/storage/backpack/satchel/sec
+	duffelbag = /obj/item/storage/backpack/duffelbag/sec
+	courierbag = /obj/item/storage/backpack/messenger/sec
+
 /datum/outfit/job/independent/captain/western
 	name = "Independent - Captain (Western)"
 	head = /obj/item/clothing/head/caphat/cowboy
@@ -154,8 +176,9 @@
 
 	id = /obj/item/card/id
 	gloves = /obj/item/clothing/gloves/color/white
-	uniform = /obj/item/clothing/under/suit/black_really
-	alt_uniform = /obj/item/clothing/under/suit/blacktwopiece
+	uniform = /obj/item/clothing/under/rank/security/detective/grey
+	suit = /obj/item/clothing/suit/toggle/lawyer/charcoal
+	neck = /obj/item/clothing/neck/tie/black
 	dcoat = null
 	glasses = /obj/item/clothing/glasses/sunglasses
 	head = null
@@ -182,7 +205,7 @@
 	duffelbag = /obj/item/storage/backpack/duffelbag/captain
 	courierbag = /obj/item/storage/backpack/messenger/com
 
-	chameleon_extras = list(/obj/item/gun/energy/e_gun, /obj/item/stamp/head_of_personnel)
+	chameleon_extras = list(/obj/item/gun/energy/e_gun, /obj/item/stamp/officer)
 
 /datum/outfit/job/independent/hop/western
 	name = "Independent - Head of Personnel (Western)"
@@ -231,6 +254,20 @@
 
 	chameleon_extras = list(/obj/item/gun/energy/e_gun/hos, /obj/item/stamp/hos)
 
+/datum/outfit/job/independent/hos/merc
+	name = "Independent - Mercenary XO"
+	id_assignment = "Lieutenant"
+
+	ears = /obj/item/radio/headset/headset_com
+	uniform = /obj/item/clothing/under/syndicate
+	shoes = /obj/item/clothing/shoes/combat
+	suit = /obj/item/clothing/suit/armor/vest
+	alt_suit = null
+	gloves = /obj/item/clothing/gloves/combat
+	head = /obj/item/clothing/head/beret
+	glasses = null
+	l_pocket = null
+
 // Roboticist
 
 /datum/outfit/job/independent/roboticist
@@ -275,12 +312,30 @@
 	chameleon_extras = list(/obj/item/gun/energy/disabler, /obj/item/clothing/glasses/hud/security/sunglasses, /obj/item/clothing/head/helmet)
 	//The helmet is necessary because /obj/item/clothing/head/helmet/sec is overwritten in the chameleon list by the standard helmet, which has the same name and icon state
 
+/datum/outfit/job/independent/security/disarmed //No armor, no pocket handcuffs.
+	name = "Independent - Security Officer (Disarmed)"
+	head = null
+	suit = null
+	l_pocket = null
+
+
 /datum/outfit/job/independent/security/western
 	name = "Independent - Security Officer (Western)"
 
 	uniform = /obj/item/clothing/under/rank/security/officer/blueshirt
 	shoes = /obj/item/clothing/shoes/jackboots
 	head = /obj/item/clothing/head/cowboy/sec
+
+/datum/outfit/job/independent/security/merc
+	name = "Independent - Security Officer (Mercenary)"
+	id_assignment = "Trooper"
+
+	uniform = /obj/item/clothing/under/syndicate/camo
+	gloves = /obj/item/clothing/gloves/fingerless
+	head = null
+	suit = null
+	dcoat = null
+
 
 /datum/outfit/job/independent/security/pirate
 	name = "Independent - Security Officer (Pirate)"
@@ -378,7 +433,7 @@
 	courierbag = /obj/item/storage/backpack/messenger/sec
 	box = /obj/item/storage/box/survival/security
 
-	chameleon_extras = /obj/item/gun/ballistic/shotgun/automatic/combat/compact
+	chameleon_extras = /obj/item/gun/ballistic/shotgun/automatic/m11
 
 // Chief Engineer
 
@@ -534,27 +589,25 @@
 	job_icon = "quartermaster"
 
 	ears = /obj/item/radio/headset/headset_cargo
-	uniform = /obj/item/clothing/under/rank/cargo/qm
+	uniform = /obj/item/clothing/under/rank/security/detective
+	head = /obj/item/clothing/head/hardhat/white
 	dcoat = /obj/item/clothing/suit/hooded/wintercoat/cargo
-	shoes = /obj/item/clothing/shoes/sneakers/brown
+	suit = /obj/item/clothing/suit/hazardvest
+	shoes = /obj/item/clothing/shoes/workboots
 	glasses = /obj/item/clothing/glasses/sunglasses
 	r_pocket = /obj/item/clipboard
 	backpack_contents = list(/obj/item/modular_computer/tablet/preset/cargo=1)
 
+	backpack = /obj/item/storage/backpack/industrial
+	satchel = /obj/item/storage/backpack/satchel/eng
 	chameleon_extras = /obj/item/stamp/qm
 
 /datum/outfit/job/independent/quartermaster/western
 	name = "Independent - Quartermaster (Western)"
 
-	uniform = /obj/item/clothing/under/rank/security/detective
-	suit = /obj/item/clothing/suit/hazardvest
-	shoes = /obj/item/clothing/shoes/workboots
+	suit = /obj/item/clothing/suit/jacket/leather/duster
 	gloves = /obj/item/clothing/gloves/fingerless
-	glasses = /obj/item/clothing/glasses/sunglasses
 	head = /obj/item/clothing/head/cowboy/sec
-
-	backpack = /obj/item/storage/backpack/industrial
-	satchel = /obj/item/storage/backpack/satchel/eng
 
 /datum/outfit/job/independent/miner
 	name = "Independent - Miner"
@@ -630,6 +683,9 @@
 
 /datum/outfit/job/independent/bartender
 	name = "Independent - Bartender"
+	job_icon = "bartender"
+	jobtype = /datum/job/bartender
+
 
 	glasses = /obj/item/clothing/glasses/sunglasses/reagent
 	ears = /obj/item/radio/headset/headset_srv
@@ -673,8 +729,6 @@
 	shoes = /obj/item/clothing/shoes/laceup
 	l_hand = /obj/item/storage/briefcase/lawyer
 	l_pocket = /obj/item/clothing/accessory/lawyers_badge
-
-	chameleon_extras = /obj/item/stamp/law
 
 // Curator
 
@@ -725,14 +779,11 @@
 	ears = /obj/item/radio/headset/headset_srv
 	uniform = /obj/item/clothing/under/rank/civilian/chaplain
 	backpack_contents = list(
-		/obj/item/stamp/chap = 1,
 		/obj/item/camera/spooky = 1
 		)
 
 	backpack = /obj/item/storage/backpack/cultpack
 	satchel = /obj/item/storage/backpack/cultpack
-
-	chameleon_extras = /obj/item/stamp/chap
 
 // Chemist
 

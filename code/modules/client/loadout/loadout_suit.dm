@@ -52,20 +52,8 @@
 	path = /obj/item/clothing/suit/toggle/lawyer/charcoal
 
 /datum/gear/suit/jacket/hoodie_black
-	display_name = "hoodie, black"
-	path = /obj/item/clothing/suit/hooded/hoodie/black
-
-/datum/gear/suit/jacket/hoodie_red
-	display_name = "hoodie, red"
-	path = /obj/item/clothing/suit/hooded/hoodie/red
-
-/datum/gear/suit/jacket/hoodie_blue
-	display_name = "hoodie, blue"
-	path = /obj/item/clothing/suit/hooded/hoodie/blue
-
-/datum/gear/suit/jacket/hoodie_gray
-	display_name = "hoodie, gray"
-	path = /obj/item/clothing/suit/hooded/hoodie/gray
+	display_name = "hoodie, recolorable"
+	path = /obj/item/clothing/suit/hooded/hoodie
 
 /datum/gear/suit/jacket/hoodie_fbp
 	display_name = "hoodie, fbp kepori"
@@ -87,7 +75,14 @@
 	display_name = "hazard jacket"
 	path = /obj/item/clothing/suit/toggle/hazard
 
+/datum/gear/suit/jacket/windbreaker
+	display_name = "windbreaker, colorable"
+	path = /obj/item/clothing/suit/toggle/windbreaker
+
 //Suspenders
+/datum/gear/suit/suspenders
+	subtype_path = /datum/gear/suit/suspenders
+
 /datum/gear/suit/suspenders/red
 	display_name = "suspenders, red"
 	path = /obj/item/clothing/suit/toggle/suspenders
