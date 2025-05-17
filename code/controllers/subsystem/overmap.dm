@@ -10,8 +10,10 @@ SUBSYSTEM_DEF(overmap)
 
 	///List of all overmap objects.
 	var/list/overmap_objects = list()
-	///List of all simulated ships. All ships in this list are fully initialized.
+	/// List of all simulated ships. All ships in this list are fully initialized.
 	var/list/controlled_ships = list()
+	/// List of all other initialized overmaps that have player outposts/spawners
+	var/list/controlled_others = list()
 	///List of spawned outposts. The default spawn location is the first index.
 	var/list/outposts = list()
 
@@ -116,7 +118,7 @@ SUBSYSTEM_DEF(overmap)
 			slot_count += ship_datum.source_template.job_slots[job_slot]
 		if(!slot_count)
 			continue
-		ship_percentages += ((length(ship_datum.manifest) / slot_count) * 100)
+		ship_percentages += ((length(ship_datum.spawnable_handler?.manifest) / slot_count) * 100)
 		counted_ships++
 	if(ship_percentages && counted_ships)
 		return round(ship_percentages / counted_ships)
@@ -144,13 +146,14 @@ SUBSYSTEM_DEF(overmap)
 /datum/controller/subsystem/overmap/proc/get_fancy_manifest()
 	var/list/manifest_out = list()
 	for(var/datum/overmap/ship/controlled/ship as anything in controlled_ships)
-		if(!length(ship.manifest))
+		var/datum/overmap_spawnable/handler = ship.spawnable_handler
+		if(isnull(handler) || !length(handler.manifest))
 			continue
 		var/list/data = list()
 		data["color"] = ship.source_template.faction.color
-		data["mode"] = ship.join_mode
-		for(var/crewmember in ship.manifest)
-			var/datum/job/crewmember_job = ship.manifest[crewmember]
+		data["mode"] = handler.join_mode
+		for(var/crewmember in handler.manifest)
+			var/datum/job/crewmember_job = handler.manifest[crewmember]
 			data["crew"] += list(list(
 				"name" = crewmember,
 				"rank" = crewmember_job.name,
@@ -163,11 +166,12 @@ SUBSYSTEM_DEF(overmap)
 /datum/controller/subsystem/overmap/proc/get_manifest()
 	var/list/manifest_out = list()
 	for(var/datum/overmap/ship/controlled/ship as anything in controlled_ships)
-		if(!length(ship.manifest))
+		var/datum/overmap_spawnable/handler = ship.spawnable_handler
+		if(isnull(handler) || !length(handler.manifest))
 			continue
 		manifest_out["[ship.name] ([ship.source_template.short_name])"] = list()
-		for(var/crewmember in ship.manifest)
-			var/datum/job/crewmember_job = ship.manifest[crewmember]
+		for(var/crewmember in handler.manifest)
+			var/datum/job/crewmember_job = handler.manifest[crewmember]
 			manifest_out["[ship.name] ([ship.source_template.short_name])"] += list(list(
 				"name" = crewmember,
 				"rank" = crewmember_job.name,
