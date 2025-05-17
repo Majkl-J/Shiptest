@@ -237,8 +237,8 @@
 	var/obj/docking_port/stationary/h_dock
 	var/datum/map_template/outpost/h_template = get_hangar_template(dock_requester.shuttle_port)
 
-	if(src in dock_requester.blacklisted)
-		return new /datum/docking_ticket(_docking_error = "Docking request denied: [dock_requester.blacklisted[src]]")
+	if(src in dock_requester.blacklisted_landings)
+		return new /datum/docking_ticket(_docking_error = "Docking request denied: [dock_requester.blacklisted_landings[src]]")
 
 	if(override_dock)
 		return new /datum/docking_ticket(override_dock, src, dock_requester)
