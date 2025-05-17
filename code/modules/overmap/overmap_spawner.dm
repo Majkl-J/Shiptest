@@ -2,18 +2,19 @@
 	/// The datum handler for possible spawn locations and handling appearing on the join menu
 	var/datum/overmap_spawnable/spawnable_handler
 
-/datum/overmap/create_spawner(
+/datum/overmap/proc/create_spawner(
 	name,
 	list/job_slots,
 	datum/faction/faction,
-	list/spawn_points
+	list/spawn_points,
+	new_type
 )
 	RETURN_TYPE(/datum/overmap_spawnable)
 
 	if(spawnable_handler)
 		QDEL_NULL(spawnable_handler)
 
-	spawnable_handler = new spawnable_handler(name, job_slots, faction)
+	spawnable_handler = new spawnable_handler(name, job_slots, faction, new_type)
 
 	if(spawn_points && length(spawn_points))
 		spawnable_handler.add_spawn_points(spawn_points)
@@ -49,11 +50,16 @@
 	var/datum/action/ship_owner/owner_act
 	/// The ID of the timer that is used to check for a new owner, if the ship ends up with a null owner.
 	var/owner_check_timer_id
+	/// List of candidates for the position of owner
+	var/list/datum/mind/owner_candidates
 
 	/// Assoc list of remaining open job slots (job = remaining slots)
 	var/list/job_slots
 	/// List of people currently spawned in/working in the location
 	var/list/manifest = list()
+
+	/// List of mob refs indexed by their job instance
+	var/list/datum/weakref/job_holder_refs = list()
 
 	/// The spawn location's join mode.
 	/// Controls whether players can join freely, have to apply, or can't join at all.
@@ -75,8 +81,38 @@
 	///List of spawn points on the location
 	var/list/atom/spawn_points = list()
 
-/datum/overmap_spawnable/New(var/name, var/list/job_slots, var/datum/faction/faction)
+/datum/overmap_spawnable/New(name, list/job_slots, datum/faction/faction, new_type)
 	. = ..()
+
+/datum/overmap_spawnable/Destroy(force)
+	. = ..()
+	if(location_type == OVERMAP_SHIP)
+		SSovermap.controlled_ships -= parent
+	else // If you ever add more specific types, redo this into a switch
+		SSovermap.controlled_others -= parent // OUTPOSTS TODO: This list needs work
+
+	QDEL_LIST(missions)
+	LAZYCLEARLIST(owner_candidates)
+	if(!QDELETED(ship_account))
+		QDEL_NULL(ship_account)
+
+	// Pretty sure lists just get dropped automatically on a destroy,
+	// and since these dont include anything we wanna qdel, this should
+	// not be needed
+	//manifest.Cut()
+	//crew_bank_accounts.Cut()
+	//job_holder_refs.Cut()
+	//job_slots.Cut()
+	//blacklisted.Cut()
+	for(var/a_key as anything in applications)
+		if(isnull(applications[a_key]))
+			continue
+		// it handles removal itself
+		qdel(applications[a_key])
+	LAZYCLEARLIST(applications)
+	// set ourselves to ownerless to unregister signals
+	set_owner_mob(null)
+
 
 /datum/overmap_spawnable/proc/add_spawn_points(var/list/to_add)
 

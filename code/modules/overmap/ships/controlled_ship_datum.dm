@@ -31,11 +31,6 @@
 	/// Is helm access for this ship locked
 	var/helm_locked = FALSE
 
-	/// List of mob refs indexed by their job instance
-	var/list/datum/weakref/job_holder_refs = list()
-
-	var/list/datum/mind/owner_candidates
-
 	/// an assoc list
 	var/ship_modules = list()
 
@@ -43,7 +38,7 @@
 	COOLDOWN_DECLARE(job_slot_adjustment_cooldown)
 
 	///Stations the ship has been blacklisted from landing at, associative station = reason
-	var/list/blacklisted = list()
+	var/list/blacklisted_landings = list()
 
 	///The cooldown for events hitting this ship. Generally used by events with a big consquence and fires slower than normal, like flares
 	COOLDOWN_DECLARE(event_cooldown)
@@ -119,32 +114,16 @@
 /datum/overmap/ship/controlled/Destroy()
 	//SHOULD be called first
 	. = ..()
-	SSovermap.controlled_ships -= src
-	current_overmap.controlled_ships -= src
 	helms.Cut()
-	QDEL_LIST(missions)
-	LAZYCLEARLIST(owner_candidates)
+	current_overmap.controlled_ships -= src
 	if(!QDELETED(shuttle_port))
 		shuttle_port.current_ship = null
 		qdel(shuttle_port, TRUE)
 		shuttle_port = null
-	if(!QDELETED(ship_account))
-		QDEL_NULL(ship_account)
 	if(!QDELETED(shipkey))
 		QDEL_NULL(shipkey)
-	manifest.Cut()
-	crew_bank_accounts.Cut()
-	job_holder_refs.Cut()
-	job_slots.Cut()
-	blacklisted.Cut()
-	for(var/a_key in applications)
-		if(isnull(applications[a_key]))
-			continue
-		// it handles removal itself
-		qdel(applications[a_key])
-	LAZYCLEARLIST(applications)
-	// set ourselves to ownerless to unregister signals
-	set_owner_mob(null)
+	if(spawnable_handler)
+		spawnable_handler.Destroy()
 
 /datum/overmap/ship/controlled/get_jump_to_turf()
 	return get_turf(shuttle_port)
