@@ -30,53 +30,17 @@
 	var/list/obj/machinery/computer/helm/helms = list()
 	/// Is helm access for this ship locked
 	var/helm_locked = FALSE
-	///Shipwide bank account used for cargo consoles and bounty payouts.
-	var/datum/bank_account/ship/ship_account
-	///Crew Owned Bank Accounts.
-	var/list/crew_bank_accounts = list()
-	///magic number for telling us how much of a mission goes into each crew member's bank account
-	var/crew_share = 0.02
-
-	/// List of currently-accepted missions.
-	var/list/datum/mission/missions
-	/// The maximum number of currently active missions that a ship may take on.
-	var/max_missions = 2
-
-	/// Manifest list of people on the ship. Indexed by mob REAL NAME. value is JOB INSTANCE
-	var/list/manifest = list()
 
 	/// List of mob refs indexed by their job instance
 	var/list/datum/weakref/job_holder_refs = list()
 
 	var/list/datum/mind/owner_candidates
 
-	/// The mob of the current ship owner. Tracking mostly uses this; that lets us pick up on logouts, which let us
-	/// determine if a player is switching to control of a mob with a different mind, who thus shouldn't be the ship owner.
-	var/mob/owner_mob
-	/// The mind of the current ship owner. Mostly kept around so that we can scream in panic if this gets changed behind our back.
-	var/datum/mind/owner_mind
-	/// The action datum given to the current owner; will be null if we don't have one.
-	var/datum/action/ship_owner/owner_act
-	/// The ID of the timer that is used to check for a new owner, if the ship ends up with a null owner.
-	var/owner_check_timer_id
-
-	/// The ship's join mode. Controls whether players can join freely, have to apply, or can't join at all.
-	var/join_mode = SHIP_JOIN_MODE_CLOSED
-	/// Lazylist of /datum/ship_applications for this ship. Only used if join_mode == SHIP_JOIN_MODE_APPLY
-	var/list/datum/ship_application/applications
-
 	/// an assoc list
 	var/ship_modules = list()
 
-	/// Short memo of the ship shown to new joins
-	var/memo = null
-	///Assoc list of remaining open job slots (job = remaining slots)
-	var/list/job_slots
 	///Time that next job slot change can occur
 	COOLDOWN_DECLARE(job_slot_adjustment_cooldown)
-
-	///The ship's real name, without the prefix
-	var/real_name
 
 	///Stations the ship has been blacklisted from landing at, associative station = reason
 	var/list/blacklisted = list()
@@ -375,49 +339,6 @@
 		// add the mob to the crewmember's guestbook and viceversa
 		crewmember.mind.guestbook.add_guest(crewmember, H, H.real_name, H.real_name, TRUE)
 		H.mind.guestbook.add_guest(H, crewmember, crewmember.real_name, crewmember.real_name, TRUE)
-
-/datum/overmap/ship/controlled/proc/set_owner_mob(mob/new_owner)
-	if(owner_mob)
-		// we (hopefully) don't have to hook qdeletion,
-		// because when mobs are qdeleted, they ghostize, which SHOULD transfer the key.
-		// that means they raise the logout signal, so we transfer to the ghost
-		UnregisterSignal(owner_mob, COMSIG_MOB_LOGOUT)
-		UnregisterSignal(owner_mob, COMSIG_MOB_GO_INACTIVE)
-		// testing trace because i am afraid
-		if(owner_mob.mind && owner_mob.mind != owner_mind)
-			// moving minds means moving keys; if this trips, a mind moved without a key move for us to pick up on
-			// when transferring mind from one body to another, source mob's mind is set to null before the transfer. thus the null check
-			// i'm going to be honest i don't have a fucking clue if this code works. mind code is hell
-			stack_trace("[src]'s owner mob [owner_mob] (mind [owner_mob.mind], player [owner_mob.mind.key]) silently changed its mind from [owner_mind] (player [owner_mind.key])!")
-		owner_act.Remove(owner_mob)
-
-	if(!new_owner) // owner mob is being set to null; we're becoming ownerless
-		owner_mob = null
-		owner_mind = null
-		if(owner_act)
-			QDEL_NULL(owner_act)
-		// turns out that timers don't get added to active_timers if the datum is getting qdeleted.
-		// so this timer was sitting around after deletion and clogging up runtime logs. thus, the QDELING() check. oops!
-		if(!owner_check_timer_id && !QDELING(src))
-			owner_check_timer_id = addtimer(CALLBACK(src, PROC_REF(check_owner)), 5 MINUTES, TIMER_STOPPABLE|TIMER_LOOP|TIMER_DELETE_ME)
-		return
-
-	owner_mob = new_owner
-	owner_mind = owner_mob.mind
-	if(owner_check_timer_id) // we know we have an owner since we didn't return up there
-		deltimer(owner_check_timer_id)
-		owner_check_timer_id = null
-
-	// testing trace
-	// not 100% sure this is needed
-	if(!(owner_mind in owner_candidates))
-		stack_trace("[src] tried to set ship owner to [new_owner] despite its mind [new_owner.mind] not being in owner_candidates!")
-
-	RegisterSignal(owner_mob, COMSIG_MOB_LOGOUT, PROC_REF(owner_mob_logout))
-	RegisterSignal(owner_mob, COMSIG_MOB_GO_INACTIVE, PROC_REF(owner_mob_afk))
-	if(!owner_act)
-		owner_act = new(src)
-	owner_act.Grant(owner_mob)
 
 /datum/overmap/ship/controlled/proc/crew_mind_deleting(datum/mind/del_mind)
 	SIGNAL_HANDLER

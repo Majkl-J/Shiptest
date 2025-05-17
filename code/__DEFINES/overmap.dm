@@ -50,7 +50,11 @@
 
 #define DYNAMIC_WORLD_TEST "test"
 
-//Possible ship states
+// Types of overmap spawn locations
+#define OVERMAP_STATIONARY "stationary"
+#define OVERMAP_SHIP "ship"
+
+// Possible ship states
 #define OVERMAP_SHIP_IDLE "idle"
 #define OVERMAP_SHIP_FLYING "flying"
 #define OVERMAP_SHIP_ACTING "acting"

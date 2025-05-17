@@ -1,6 +1,6 @@
 /datum/ship_application
-	/// The ship this application is linked to.
-	var/datum/overmap/ship/controlled/parent_ship
+	/// The location this application is linked to.
+	var/datum/overmap_spawnable/parent
 	/// The applicant's new player mob. We keep track of it to send them an update message if they haven't joined a ship yet.
 	var/mob/dead/new_player/app_mob
 	/// Whether to expose the user's key to the application recipient. Even if this is false, we still store apps using the key.
@@ -21,23 +21,23 @@
 	app_mob = applicant
 	app_name = app_mob.client?.prefs.real_name
 	app_key = app_mob.client?.holder?.fakekey ? app_mob.client.holder.fakekey : applicant.key
-	parent_ship = parent
+	parent = parent
 
 	// these are registered so we can cancel the application fill-out if the ship
 	// gets deleted before the application is finalized, or the character spawns in.
 	// your currently-open tgui windows don't get removed if you spawn into a body
 	RegisterSignal(app_mob, COMSIG_PARENT_QDELETING, PROC_REF(applicant_deleting))
-	RegisterSignal(parent_ship, COMSIG_PARENT_QDELETING, PROC_REF(important_deleting_during_apply))
+	RegisterSignal(parent, COMSIG_PARENT_QDELETING, PROC_REF(important_deleting_during_apply))
 
 /datum/ship_application/Destroy()
 	SStgui.close_uis(src)
 	if(status != SHIP_APPLICATION_UNFINISHED && status != SHIP_APPLICATION_CANCELLED)
-		LAZYREMOVE(parent_ship.applications, ckey(app_key))
+		LAZYREMOVE(parent.applications, ckey(app_key))
 		if(app_mob)
 			SEND_SOUND(app_mob, sound('sound/misc/server-ready.ogg', volume=50))
-			to_chat(app_mob, span_warning("Your application to [parent_ship] has been deleted."), MESSAGE_TYPE_INFO)
+			to_chat(app_mob, span_warning("Your application to [parent] has been deleted."), MESSAGE_TYPE_INFO)
 	app_mob = null
-	parent_ship = null
+	parent = null
 	. = ..()
 
 /datum/ship_application/proc/get_user_response()
@@ -53,17 +53,17 @@
 	// we are now ready to finalize
 	// unregister the ship qdel signal -- we add ourselves to the ship's applications, and it qdels us
 	// when it deletes, so we don't need to worry about that anymore. we keep the applicant deletion signal
-	UnregisterSignal(parent_ship, COMSIG_PARENT_QDELETING)
-	LAZYSET(parent_ship.applications, ckey(app_key), src)
+	UnregisterSignal(parent, COMSIG_PARENT_QDELETING)
+	LAZYSET(parent.applications, ckey(app_key), src)
 
-	if(parent_ship.owner_mob != null)
+	if(parent.owner_mob != null)
 		// don't need to use check_blinking, because it DAMN well better be blinking now that we exist
-		parent_ship.owner_act.set_blinking(TRUE)
-		SEND_SOUND(parent_ship.owner_mob, sound('sound/misc/server-ready.ogg', volume=50))
+		parent.owner_act.set_blinking(TRUE)
+		SEND_SOUND(parent.owner_mob, sound('sound/misc/server-ready.ogg', volume=50))
 		var/message = \
 			"<span class='looc'>[app_name] [show_key ? "([app_key]) " : null]applied to your ship: [app_msg]\n" + \
 			"<a href=?src=[REF(src)];application_accept=1>(ACCEPT)</a> / <a href=?src=[REF(src)];application_deny=1>(DENY)</a></span>"
-		to_chat(parent_ship.owner_mob, message, MESSAGE_TYPE_INFO)
+		to_chat(parent.owner_mob, message, MESSAGE_TYPE_INFO)
 	return TRUE
 
 /datum/ship_application/proc/applicant_deleting()
@@ -77,7 +77,7 @@
 // the applicant is in the midst of writing their application
 /datum/ship_application/proc/important_deleting_during_apply()
 	SIGNAL_HANDLER
-	UnregisterSignal(parent_ship, COMSIG_PARENT_QDELETING)
+	UnregisterSignal(parent, COMSIG_PARENT_QDELETING)
 	UnregisterSignal(app_mob, COMSIG_PARENT_QDELETING)
 	status = SHIP_APPLICATION_CANCELLED
 
@@ -99,7 +99,7 @@
 
 /datum/ship_application/ui_data(mob/user)
 	. = list()
-	.["ship_name"] = parent_ship.name
+	.["ship_name"] = parent.name
 	.["player_name"] = app_name
 
 /datum/ship_application/ui_act(action, list/params, datum/tgui/ui)
@@ -123,7 +123,7 @@
 // Topic() for when the ship owner clicks on approve/deny in their chat window
 /datum/ship_application/Topic(href, href_list)
 	. = ..()
-	if(usr != parent_ship.owner_mob)
+	if(usr != parent.owner_mob)
 		return
 
 	if(href_list["application_accept"])
@@ -138,14 +138,14 @@
 	status = new_status
 	to_chat(usr, span_notice("Application [status]."), MESSAGE_TYPE_INFO)
 
-	if(parent_ship.owner_act)
-		parent_ship.owner_act.check_blinking()
+	if(parent.owner_act)
+		parent.owner_act.check_blinking()
 
 	if(!app_mob)
 		return
 	SEND_SOUND(app_mob, sound('sound/misc/server-ready.ogg', volume=50))
 	switch(status)
 		if(SHIP_APPLICATION_ACCEPTED)
-			to_chat(app_mob, span_notice("Your application to [parent_ship] was accepted!"), MESSAGE_TYPE_INFO)
+			to_chat(app_mob, span_notice("Your application to [parent] was accepted!"), MESSAGE_TYPE_INFO)
 		if(SHIP_APPLICATION_DENIED)
-			to_chat(app_mob, span_warning("Your application to [parent_ship] was denied!"), MESSAGE_TYPE_INFO)
+			to_chat(app_mob, span_warning("Your application to [parent] was denied!"), MESSAGE_TYPE_INFO)

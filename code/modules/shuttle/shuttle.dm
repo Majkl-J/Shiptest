@@ -462,9 +462,6 @@
 	///The linked overmap object, if there is one
 	var/datum/overmap/ship/controlled/current_ship
 
-	///List of spawn points on the ship
-	var/list/atom/spawn_points = list()
-
 	///List of all stationary docking ports that spawned on the ship roundstart, used for docking to other ships.
 	var/list/obj/docking_port/stationary/docking_points
 
