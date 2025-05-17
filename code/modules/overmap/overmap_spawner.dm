@@ -113,7 +113,7 @@
 	// set ourselves to ownerless to unregister signals
 	set_owner_mob(null)
 
-
+// OUTPOSTS TODO: Read through all of the below, adjust where needed
 /datum/overmap_spawnable/proc/add_spawn_points(var/list/to_add)
 
 /datum/overmap_spawnable/proc/set_owner_mob(mob/new_owner)
@@ -158,3 +158,109 @@
 	if(!owner_act)
 		owner_act = new(src)
 	owner_act.Grant(owner_mob)
+
+/datum/overmap_spawnable/proc/is_join_option()
+	return (length(spawn_points) >= 1) && (length(job_slots) >= 1) && join_mode != SHIP_JOIN_MODE_CLOSED
+
+/datum/overmap_spawnable/proc/get_application(mob/applicant)
+	var/index_key = applicant.client?.holder?.fakekey ? applicant.client.holder.fakekey : applicant.key
+	return LAZYACCESS(applications, ckey(index_key))
+
+/**
+ * Bastardized version of GLOB.manifest.manifest_inject, but used per ship.
+ * Adds the passed-in mob to the list of ship owner candidates, and makes them
+ * the ship owner if there is currently none.
+ *
+ * * H - Human mob to add to the manifest
+ * * C - client of the mob to add to the manifest
+ * * human_job - Job of the human mob to add to the manifest
+ */
+/datum/overmap_spawnable/proc/manifest_inject(mob/living/carbon/human/H, client/C, datum/job/human_job)
+	// no idea why this check exists
+	if(H.mind.assigned_role != H.mind.special_role)
+		manifest[H.real_name] = human_job
+
+	var/mind_info = list(
+		name = H.real_name,
+		eligible = TRUE
+	)
+	LAZYSET(owner_candidates, H.mind, mind_info)
+	H.mind.original_ship = WEAKREF(src)
+	RegisterSignal(H.mind, COMSIG_PARENT_QDELETING, PROC_REF(crew_mind_deleting))
+	if(!owner_mob)
+		set_owner_mob(H)
+
+	if(!(human_job in job_holder_refs))
+		job_holder_refs[human_job] = list()
+	job_holder_refs[human_job] += WEAKREF(H)
+	if(H.account_id)
+		crew_bank_accounts += WEAKREF(H.get_bank_account())
+
+/**
+ * adds a mob's real name to a crew's guestbooks
+ *
+ * * H - human mob to add to the crew's guestbooks
+ */
+/datum/overmap_spawnable/proc/add_mob_to_crew_guestbook(mob/living/carbon/human/H)
+	// iterate over the human list to find crewmembers
+	for(var/mob/living/carbon/human/crewmember as anything in GLOB.human_list)
+		if(crewmember == H)
+			continue
+		if(!(crewmember.real_name in manifest))
+			continue
+		if(!crewmember.mind?.guestbook)
+			continue
+
+		// add the mob to the crewmember's guestbook and viceversa
+		crewmember.mind.guestbook.add_guest(crewmember, H, H.real_name, H.real_name, TRUE)
+		H.mind.guestbook.add_guest(H, crewmember, crewmember.real_name, crewmember.real_name, TRUE)
+
+/datum/overmap_spawnable/proc/crew_mind_deleting(datum/mind/del_mind)
+	SIGNAL_HANDLER
+
+	UnregisterSignal(del_mind, COMSIG_PARENT_QDELETING)
+	LAZYREMOVE(owner_candidates, del_mind)
+	if(owner_mind == del_mind)
+		set_owner_mob(get_best_owner_mob())
+
+/datum/overmap_spawnable/proc/owner_mob_logout(mob/mob_logging)
+	SIGNAL_HANDLER
+
+	var/mob/new_mob = GLOB.directory[ckey(owner_mind.key)]?.mob // get owner's client and through that their new mob
+	var/needs_new_owner = FALSE
+	if(!new_mob || new_mob.mind != owner_mind || new_mob.client.is_afk())
+		needs_new_owner = TRUE
+	else if(istype(new_mob, /mob/dead/observer))
+		var/mob/dead/observer/new_ghost = new_mob
+		if(!new_ghost.can_reenter_corpse)
+			needs_new_owner = TRUE
+
+	if(needs_new_owner)
+		new_mob = get_best_owner_mob()
+	set_owner_mob(new_mob)
+
+/datum/overmap_spawnable/proc/owner_mob_afk(mob/going_afk)
+	SIGNAL_HANDLER
+
+	set_owner_mob(get_best_owner_mob())
+
+/datum/overmap_spawnable/proc/check_owner()
+	if(owner_mob)
+		return
+	var/mob/new_mob = get_best_owner_mob()
+	if(new_mob)
+		set_owner_mob(new_mob)
+
+// goes through our list of candidates and finds a valid candidate for ship owner, or null if none can be found
+/datum/overmap_spawnable/proc/get_best_owner_mob()
+	. = null
+	for(var/datum/mind/possible as anything in owner_candidates)
+		var/mob/candidate_mob = get_mob_if_valid_owner(possible)
+		if(candidate_mob)
+			return candidate_mob
+
+/datum/overmap_spawnable/proc/get_mob_if_valid_owner(datum/mind/candidate)
+	if(!(candidate in owner_candidates) || !owner_candidates[candidate]["eligible"])
+		return null
+	var/mob/candidate_mob = candidate.active ? candidate.current : candidate.get_ghost(FALSE, FALSE)
+	return (candidate_mob != null && candidate_mob.client && !candidate_mob.client.is_afk() ? candidate_mob : null)
