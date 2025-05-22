@@ -54,9 +54,13 @@
 	var/list/datum/mind/owner_candidates
 
 	/// Assoc list of remaining open job slots (job = remaining slots)
-	var/list/job_slots
+	var/list/job_slots = list()
+	/// Default amount of slots that we were initialized with
+	var/list/job_slots_default = list()
 	/// List of people currently spawned in/working in the location
 	var/list/manifest = list()
+	///Time that next job slot change can occur
+	COOLDOWN_DECLARE(job_slot_adjustment_cooldown)
 
 	/// List of mob refs indexed by their job instance
 	var/list/datum/weakref/job_holder_refs = list()
@@ -81,8 +85,11 @@
 	///List of spawn points on the location
 	var/list/atom/spawn_points = list()
 
-/datum/overmap_spawnable/New(name, list/job_slots, datum/faction/faction, new_type)
+/datum/overmap_spawnable/New(name, list/init_job_slots, datum/faction/faction, new_type)
 	. = ..()
+	job_slots_default = init_job_slots.Copy()
+	job_slots = init_job_slots.Copy()
+
 
 /datum/overmap_spawnable/Destroy(force)
 	. = ..()

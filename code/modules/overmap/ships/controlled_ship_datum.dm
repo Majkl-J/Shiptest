@@ -34,9 +34,6 @@
 	/// an assoc list
 	var/ship_modules = list()
 
-	///Time that next job slot change can occur
-	COOLDOWN_DECLARE(job_slot_adjustment_cooldown)
-
 	///Stations the ship has been blacklisted from landing at, associative station = reason
 	var/list/blacklisted_landings = list()
 
