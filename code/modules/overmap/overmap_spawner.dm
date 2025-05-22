@@ -185,7 +185,7 @@
 		eligible = TRUE
 	)
 	LAZYSET(owner_candidates, H.mind, mind_info)
-	H.mind.original_ship = WEAKREF(src)
+	H.mind.original_spawn = WEAKREF(src)
 	RegisterSignal(H.mind, COMSIG_PARENT_QDELETING, PROC_REF(crew_mind_deleting))
 	if(!owner_mob)
 		set_owner_mob(H)

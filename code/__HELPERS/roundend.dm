@@ -374,8 +374,8 @@
 	var/list/parts = list()
 	var/mob/M = C.mob
 	if(M.mind && !isnewplayer(M))
-		var/datum/overmap/ship/controlled/original_ship = M.mind.original_ship?.resolve()
-		var/location = original_ship ? "aboard [original_ship]" : "in [station_name()]"
+		var/datum/overmap_spawnable/original_spawn = M.mind.original_spawn?.resolve()
+		var/location = original_spawn ? "aboard [original_spawn.name]" : "in [station_name()]"
 		if(M.stat != DEAD && !isbrain(M))
 			parts += "<div class='panel greenborder'>"
 			parts += span_greentext("You managed to survive the events [location] as [M.real_name].")

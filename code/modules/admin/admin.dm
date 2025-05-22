@@ -685,9 +685,9 @@
 	set category = "Admin"
 	set name = "Unprison"
 	if (is_centcom_level(M))
-		var/datum/overmap/ship/controlled/original_ship = M.mind.original_ship.resolve()
-		if(original_ship)
-			var/atom/new_spawn_point = pick(original_ship.shuttle_port.spawn_points)
+		var/datum/overmap_spawnable/original_spawn = M.mind.original_spawn.resolve()
+		if(original_spawn)
+			var/atom/new_spawn_point = pick(original_spawn.spawn_points)
 			new_spawn_point.join_player_here(M)
 			message_admins("[key_name_admin(usr)] has unprisoned [key_name_admin(M)]")
 			log_admin("[key_name(usr)] has unprisoned [key_name(M)]")

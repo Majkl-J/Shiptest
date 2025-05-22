@@ -88,8 +88,8 @@
 	/// A lazy list of statuses to add next to this mind in the traitor panel
 	var/list/special_statuses
 
-	/// A weakref to the /datum/overmap/ship/controlled the original mob spawned on
-	var/datum/weakref/original_ship
+	/// A weakref to the /datum/overmap_spawnable the original mob spawned with
+	var/datum/weakref/original_spawn
 
 /datum/mind/New(_key)
 	SSticker.minds += src
