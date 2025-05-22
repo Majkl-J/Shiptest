@@ -160,7 +160,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/machinery/computer/cryopod/retro, 17)
 
 	var/open_state = "cryopod-open"
 	var/close_state = "cryopod"
-	var/obj/docking_port/mobile/linked_ship
+	var/datum/overmap_spawnable/linked_loc
 
 	var/open_sound = 'sound/machines/podopen.ogg'
 	var/close_sound = 'sound/machines/podclose.ogg'
@@ -173,8 +173,7 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/machinery/computer/cryopod/retro, 17)
 	return INITIALIZE_HINT_LATELOAD //Gotta populate the cryopod computer GLOB first
 
 /obj/machinery/cryopod/Destroy()
-	linked_ship?.spawn_points -= src
-	linked_ship = null
+	linked_loc?.spawn_points -= src
 	return ..()
 
 /obj/machinery/cryopod/LateInitialize()
@@ -221,8 +220,8 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/machinery/computer/cryopod/retro, 17)
 	sleepyhead.set_sleeping(60)
 	sleepyhead.set_nutrition(200)
 	to_chat(sleepyhead, span_boldnotice("You begin to wake from cryosleep..."))
-	var/ship_name = "<span class='maptext' style=font-size:24pt;text-align:center valign='top'><u>[linked_ship.current_ship.name]</u></span>"
-	var/sector_name = "[linked_ship.current_ship.current_overmap.name]"
+	var/ship_name = "<span class='maptext' style=font-size:24pt;text-align:center valign='top'><u>[linked_loc.name]</u></span>"
+	var/sector_name = "[linked_loc.parent.current_overmap.name]"
 	var/time = "[station_time_timestamp("hh:mm")]"
 	var/character_name = "[sleepyhead.real_name]"
 
@@ -444,8 +443,11 @@ MAPPING_DIRECTIONAL_HELPERS(/obj/machinery/computer/cryopod/retro, 17)
 
 /obj/machinery/cryopod/connect_to_shuttle(obj/docking_port/mobile/port, obj/docking_port/stationary/dock, idnum, override)
 	. = ..()
-	linked_ship = port
-	linked_ship.spawn_points += src
+	var/datum/overmap_spawnable/handler = port.current_ship?.spawnable_handler
+	if(isnull(handler))
+		stack_trace("Functional cryopod spawned on a shuttle without a spawnable handler")
+	linked_loc = handler
+	handler.spawn_points += src
 
 /obj/machinery/cryopod/syndicate
 	icon_state = "sleeper_s-open"
