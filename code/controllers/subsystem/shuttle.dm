@@ -556,19 +556,19 @@ SUBSYSTEM_DEF(shuttle)
 			if(!temp_loc)
 				return
 			var/datum/overmap/outpost/please_leave = temp_loc
-			if(please_leave in port_ship.blacklisted)
+			if(please_leave in port_ship.blacklisted_landings)
 				if(tgui_alert(user, "Rescind ship blacklist?", "Maybe They Aren't So Bad", list("Yes", "No")) == "Yes")
-					port_ship.blacklisted &= ~please_leave
+					port_ship.blacklisted_landings &= ~please_leave
 					message_admins("[key_name_admin(user)] unblocked [port_ship] from [please_leave].")
 					log_admin("[key_name_admin(user)] unblocked [port_ship] from [please_leave].")
 				return TRUE
 			var/reason = input(user, "Provide a reason for blacklisting, which will be displayed on docking attempts", "Bar Them From The Pearly Gates", "Contact local law enforcement for more information.") as null|text
 			if(!reason)
 				return TRUE
-			if(please_leave in port_ship.blacklisted) //in the event two admins are blacklisting a ship at the same time
+			if(please_leave in port_ship.blacklisted_landings) //in the event two admins are blacklisting a ship at the same time
 				if(tgui_alert(user, "Ship is already blacklisted, overwrite current reason with your own?", "I call the shots here", list("Yes", "No")) != "Yes")
 					return TRUE
-			port_ship.blacklisted[please_leave] = reason
+			port_ship.blacklisted_landings[please_leave] = reason
 			message_admins("[key_name_admin(user)] blacklisted [port_ship] from landing at [please_leave] with reason: [reason]")
 			log_admin("[key_name_admin(user)] blacklisted [port_ship] from landing at [please_leave] with reason: [reason]")
 			return TRUE
