@@ -40,8 +40,8 @@
 	var/accepted = FALSE
 	/// The outpost that issued this mission. Passed in New().
 	var/datum/overmap/outpost/source_outpost
-	/// The ship that accepted this mission. Passed in accept().
-	var/datum/overmap/ship/controlled/servant
+	/// The spawnable location that accepted this mission. Passed in accept().
+	var/datum/overmap_spawnable/servant
 
 	/// Assoc list of atoms "bound" to this mission; each atom is associated with a 2-element list. The first
 	/// entry in that list is a bool that determines if the mission should fail when the atom qdeletes; the second
@@ -151,7 +151,7 @@
 /datum/mission/proc/spawn_mission_details(datum/overmap/dynamic/planet)
 	return
 
-/datum/mission/proc/accept(datum/overmap/ship/controlled/acceptor, turf/accept_loc)
+/datum/mission/proc/accept(datum/overmap_spawnable/acceptor, turf/accept_loc)
 	SSblackbox.record_feedback("nested tally", "[blackbox_prefix]mission", 1, list(name, "accepted"))
 	accepted = TRUE
 	servant = acceptor
