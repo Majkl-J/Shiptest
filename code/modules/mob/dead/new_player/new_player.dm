@@ -271,10 +271,10 @@
 			return "[jobtitle] is already filled to capacity."
 	return "Error: Unknown job availability."
 
-/mob/dead/new_player/proc/IsJobUnavailable(datum/job/job, datum/overmap/ship/controlled/ship, check_playtime, latejoin = FALSE)
+/mob/dead/new_player/proc/IsJobUnavailable(datum/job/job, datum/overmap_spawnable/spawnable, check_playtime, latejoin = FALSE)
 	if(!job)
 		return JOB_UNAVAILABLE_GENERIC
-	if(!(ship.job_slots[job] > 0))
+	if(!(spawnable.job_slots[job] > 0))
 		return JOB_UNAVAILABLE_SLOTFULL
 	if(is_banned_from(ckey, job.name))
 		return JOB_UNAVAILABLE_BANNED
@@ -282,13 +282,15 @@
 		return JOB_UNAVAILABLE_GENERIC
 	if(!job.player_old_enough(client))
 		return JOB_UNAVAILABLE_ACCOUNTAGE
-	if(check_playtime && !ship.source_template.has_job_playtime(client, job))
-		return JOB_UNAVAILABLE_PLAYTIME
+	if(check_playtime && spawnable.location_type == OVERMAP_SHIP)
+		var/datum/overmap/ship/controlled/shippy = spawnable.parent
+		if(shippy && shippy.source_template.has_job_playtime(client, job))
+			return JOB_UNAVAILABLE_PLAYTIME
 	if(latejoin && !job.special_check_latejoin(client))
 		return JOB_UNAVAILABLE_GENERIC
 	return JOB_AVAILABLE
 
-/mob/dead/new_player/proc/AttemptLateSpawn(datum/job/job, datum/overmap/ship/controlled/ship, check_playtime = TRUE)
+/mob/dead/new_player/proc/AttemptLateSpawn(datum/job/job, datum/overmap_spawnable/handler, check_playtime = TRUE)
 	if(auth_check)
 		return
 
@@ -298,25 +300,29 @@
 			to_chat(usr, "<span class='warning'>Someone has spawned with this name already.")
 			return FALSE
 
-	var/error = IsJobUnavailable(job, ship, check_playtime)
+	var/error = IsJobUnavailable(job, handler, check_playtime)
 	if(error != JOB_AVAILABLE)
 		alert(src, get_job_unavailable_error_message(error, job))
 		return FALSE
 
 	//Removes a job slot
-	ship.job_slots[job]--
+	handler.job_slots[job]--
 
 	//Remove the player from the join queue if he was in one and reset the timer
 	SSticker.queued_players -= src
 	SSticker.queue_delay = 4
 
 	var/mob/living/carbon/human/character = create_character(TRUE)	//creates the human and transfers vars and mind
-	var/equip = job.EquipRank(character, ship)
+	var/datum/overmap/ship/controlled/shippy
+	if(handler.type == OVERMAP_SHIP)
+		shippy = handler.parent
+
+	var/equip = job.EquipRank(character, shippy)
 	if(isliving(equip))	//Borgs get borged in the equip, so we need to make sure we handle the new mob.
 		character = equip
 
 	if(job && !job.override_latejoin_spawn(character))
-		var/atom/spawn_point = pick(ship.shuttle_port.spawn_points)
+		var/atom/spawn_point = pick(handler.spawn_points)
 		spawn_point.join_player_here(character)
 		var/atom/movable/screen/splash/Spl = new(character.client, TRUE)
 		Spl.Fade(TRUE)
@@ -327,10 +333,10 @@
 
 	if(ishuman(character))	//These procs all expect humans
 		var/mob/living/carbon/human/humanc = character
-		ship.manifest_inject(humanc, client, job)
+		handler.manifest_inject(humanc, client, job)
 		GLOB.data_core.manifest_inject(humanc, client)
-		ship.add_mob_to_crew_guestbook(humanc)
-		AnnounceArrival(humanc, job.name, ship)
+		handler.add_mob_to_crew_guestbook(humanc)
+		AnnounceArrival(humanc, job.name, handler)
 		AddEmploymentContract(humanc)
 		SSblackbox.record_feedback("tally", "species_spawned", 1, humanc.dna.species.name)
 
@@ -345,9 +351,9 @@
 
 	log_manifest(character.mind.key, character.mind, character, TRUE)
 
-	SSblackbox.record_feedback("tally", "player_joined_faction", 1, ship.source_template.faction.name)
-	if(length(ship.job_slots) > 1 && ship.job_slots[1] == job) // if it's the "captain" equivalent job of the ship. checks to make sure it's not a one-job ship
-		minor_announce("[job.name] [character.real_name] on deck!", zlevel = ship.shuttle_port.virtual_z())
+	SSblackbox.record_feedback("tally", "player_joined_faction", 1, handler.faction.name)
+	if(length(handler.job_slots) > 1 && handler.job_slots[1] == job) // if it's the "captain" equivalent job of the ship. checks to make sure it's not a one-job ship
+		minor_announce("[job.name] [character.real_name] on deck!", zlevel = character.virtual_z()) // OUTPOSTS TODO: Redo the whole virtual_z check to work with the datum
 	return TRUE
 
 /mob/dead/new_player/proc/AddEmploymentContract(mob/living/carbon/human/employee)

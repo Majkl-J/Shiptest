@@ -22,18 +22,19 @@
 	switch(action)
 		if("join")
 			var/datum/overmap/ship/controlled/target = locate(params["ship"]) in SSovermap.controlled_ships
-			if(!target)
+			var/datum/overmap_spawnable/handler = target.spawnable_handler
+			if(isnull(target) || isnull(handler))
 				to_chat(spawnee, span_danger("Unable to locate ship. Please contact admins!"))
 				spawnee.new_player_panel()
 				return
-			if(!target.is_join_option())
+			if(!handler.is_join_option())
 				to_chat(spawnee, span_danger("This ship is not currently accepting new players!"))
 				spawnee.new_player_panel()
 				return
 
 			var/did_application = FALSE
-			if(target.join_mode == SHIP_JOIN_MODE_APPLY)
-				var/datum/ship_application/current_application = target.get_application(spawnee)
+			if(handler.join_mode == SHIP_JOIN_MODE_APPLY)
+				var/datum/ship_application/current_application = handler.get_application(spawnee)
 				if(isnull(current_application))
 					var/datum/ship_application/app = new(spawnee, target)
 					if(app.get_user_response())
@@ -52,12 +53,12 @@
 						return
 				did_application = TRUE
 
-			if(target.join_mode == SHIP_JOIN_MODE_CLOSED || (target.join_mode == SHIP_JOIN_MODE_APPLY && !did_application))
+			if(handler.join_mode == SHIP_JOIN_MODE_CLOSED || (handler.join_mode == SHIP_JOIN_MODE_APPLY && !did_application))
 				to_chat(spawnee, span_warning("You cannot join this ship anymore, as its join mode has changed!"))
 				return
 
 			ui.close()
-			var/datum/job/selected_job = locate(params["job"]) in target.job_slots
+			var/datum/job/selected_job = locate(params["job"]) in handler.job_slots
 			// Attempts the spawn itself. This checks for playtime requirements.
 			if(!spawnee.AttemptLateSpawn(selected_job, target))
 				to_chat(spawnee, span_danger("Unable to spawn on ship!"))
@@ -112,8 +113,9 @@
 
 			to_chat(spawnee, "<span class='danger'>Your [template.name] is being prepared. Please be patient!</span>")
 			var/datum/overmap/ship/controlled/target = SSovermap.spawn_ship_at_start(template, ship_loc, selected_system)
+			var/datum/overmap_spawnable/handler = target.spawnable_handler
 
-			if(!target?.shuttle_port)
+			if(isnull(target) || !target.shuttle_port || isnull(target.spawnable_handler))
 				to_chat(spawnee, span_danger("There was an error loading the ship. Please contact admins!"))
 				spawnee.new_player_panel()
 				return
@@ -121,7 +123,7 @@
 			SSblackbox.record_feedback("tally", "faction_ship_purchased", 1, template.faction.name)
 			// Try to spawn as the first listed job in the job slots (usually captain)
 			// Playtime checks are overridden, to ensure the player gets to join the ship they spawned.
-			if(!spawnee.AttemptLateSpawn(target.job_slots[1], target, FALSE))
+			if(!spawnee.AttemptLateSpawn(handler.job_slots[1], target, FALSE))
 				to_chat(spawnee, span_danger("Ship spawned, but you were unable to be spawned. You can likely try to spawn in the ship through joining normally, but if not, please contact an admin."))
 				spawnee.new_player_panel()
 
@@ -142,17 +144,20 @@
 	.["playMin"] = user.client ? user.client.get_exp_living(TRUE) : 0
 
 	for(var/datum/overmap/ship/controlled/shippy as anything in SSovermap.controlled_ships)
+		var/datum/overmap_spawnable/handler = shippy.spawnable_handler
+		if(isnull(handler))
+			stack_trace("Attempted to display a controlled ship on selection ui without a handler for spawning.")
 		if(shippy.source_template)
 			if(!template_num_lookup[shippy.source_template])
 				template_num_lookup[shippy.source_template] = 1
 			else
 				template_num_lookup[shippy.source_template] += 1
-		if(!shippy.is_join_option())
+		if(!handler.is_join_option())
 			continue
 
 		var/list/ship_jobs = list()
-		for(var/datum/job/job as anything in shippy.job_slots)
-			var/slots = shippy.job_slots[job]
+		for(var/datum/job/job as anything in handler.job_slots)
+			var/slots = handler.job_slots[job]
 			if(slots <= 0)
 				continue
 			ship_jobs += list(list(
@@ -168,10 +173,10 @@
 			"class" = shippy.source_template.short_name,
 			"desc" = shippy.source_template.description,
 			"tags" = shippy.source_template.tags,
-			"memo" = shippy.memo,
+			"memo" = handler.memo,
 			"jobs" = ship_jobs,
-			"manifest" = shippy.manifest,
-			"joinMode" = shippy.join_mode,
+			"manifest" = handler.manifest,
+			"joinMode" = handler.join_mode,
 			"ref" = REF(shippy)
 		)
 

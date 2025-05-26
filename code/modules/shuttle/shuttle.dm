@@ -492,8 +492,6 @@
 		message_admins("Shuttle [src] deleted at [ADMIN_VERBOSEJMP(src)]")
 		log_game("Shuttle [src] deleted at [AREACOORD(src)]")
 
-	spawn_points.Cut()
-
 	SSshuttle.mobile -= src
 
 	destination = null
