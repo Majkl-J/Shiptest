@@ -12,8 +12,8 @@ SUBSYSTEM_DEF(overmap)
 	var/list/overmap_objects = list()
 	/// List of all simulated ships. All ships in this list are fully initialized.
 	var/list/controlled_ships = list()
-	/// List of all other initialized overmaps that have player outposts/spawners
-	var/list/controlled_others = list()
+	/// List of all initialized overmaps that have player outposts/spawners
+	var/list/controlled_locations = list()
 	///List of spawned outposts. The default spawn location is the first index.
 	var/list/outposts = list()
 

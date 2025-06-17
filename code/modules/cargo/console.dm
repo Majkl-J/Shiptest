@@ -12,8 +12,8 @@
 	circuit = /obj/item/circuitboard/computer/cargo
 	light_color = COLOR_BRIGHT_ORANGE
 
-	/// The ship we reside on for ease of access
-	var/datum/overmap/ship/controlled/current_ship
+	/// The handler for the overmap location we reside on for ease of access
+	var/datum/overmap_spawnable/current_handler
 	var/contraband = FALSE
 	var/self_paid = FALSE
 	var/safety_warning = "For safety reasons, the automated supply shuttle \
@@ -54,7 +54,7 @@
 	update_static_data(user)
 
 /obj/machinery/computer/cargo/connect_to_shuttle(obj/docking_port/mobile/port, obj/docking_port/stationary/dock)
-	current_ship = port.current_ship
+	current_handler = port.current_ship.spawnable_handler
 
 /obj/machinery/computer/cargo/ui_interact(mob/user, datum/tgui/ui)
 	ui = SStgui.try_update_ui(user, src, ui)
@@ -66,7 +66,7 @@
 
 /obj/machinery/computer/cargo/ui_static_data(mob/user)
 	. = ..()
-	var/outpost_docked = istype(current_ship.docked_to, /datum/overmap/outpost)
+	var/outpost_docked = istype(current_handler.current_outpost, /datum/overmap/outpost)
 	if(outpost_docked)
 		generate_pack_data()
 	else
@@ -75,12 +75,12 @@
 /obj/machinery/computer/cargo/ui_data(mob/user)
 	var/list/data = list()
 
-	var/outpost_docked = istype(current_ship.docked_to, /datum/overmap/outpost)
+	var/outpost_docked = istype(current_handler.current_outpost, /datum/overmap/outpost)
 
-	data["onShip"] = !isnull(current_ship)
-	data["shipFaction"] = current_ship.source_template.faction.name
-	data["numMissions"] = current_ship ? LAZYLEN(current_ship.missions) : 0
-	data["maxMissions"] = current_ship ? current_ship.max_missions : 0
+	data["onShip"] = !isnull(current_handler)
+	data["shipFaction"] = current_handler.faction.name
+	data["numMissions"] = current_handler ? LAZYLEN(current_handler.missions) : 0
+	data["maxMissions"] = current_handler ? current_handler.max_missions : 0
 	data["outpostDocked"] = outpost_docked
 	data["points"] = charge_account ? charge_account.account_balance : 0
 	data["siliconUser"] = user.has_unlimited_silicon_privilege && check_ship_ai_access(user)
@@ -94,13 +94,13 @@
 	data["shipMissions"] = list()
 	data["outpostMissions"] = list()
 
-	if(current_ship)
-		for(var/datum/mission/outpost/M as anything in current_ship.missions)
-			data["shipMissions"] += list(M.get_tgui_info())
+	if(current_handler)
+		for(var/datum/mission/outpost/mission as anything in current_handler.missions)
+			data["shipMissions"] += list(mission.get_tgui_info())
 		if(outpost_docked)
-			var/datum/overmap/outpost/out = current_ship.docked_to
-			for(var/datum/mission/outpost/M as anything in out.missions)
-				data["outpostMissions"] += list(M.get_tgui_info())
+			var/datum/overmap/outpost/out = current_handler.current_outpost
+			for(var/datum/mission/outpost/mission as anything in out.missions)
+				data["outpostMissions"] += list(mission.get_tgui_info())
 
 	return data
 
@@ -126,8 +126,8 @@
 		if("purchase")
 			var/list/purchasing = params["cart"]
 			var/total_cost = text2num(params["total"])
-			var/datum/overmap/outpost/current_outpost = current_ship.docked_to
-			if(!istype(current_ship.docked_to) || purchasing.len == 0)
+			var/datum/overmap/outpost/current_outpost = current_handler.current_outpost
+			if(!istype(current_handler.current_outpost) || purchasing.len == 0)
 				return
 
 			if(!charge_account.adjust_money(-total_cost, CREDIT_LOG_CARGO))
@@ -162,17 +162,18 @@
 
 		if("mission-act")
 			var/datum/mission/outpost/mission = locate(params["ref"])
-			var/obj/docking_port/mobile/D = SSshuttle.get_containing_shuttle(src)
-			var/datum/overmap/ship/controlled/ship = D.current_ship
+			var/obj/docking_port/mobile/dock = SSshuttle.get_containing_shuttle(src)
+			var/datum/overmap/ship/controlled/ship = dock.current_ship
+			var/datum/overmap_spawnable/mission_handler = ship.spawnable_handler
 			var/datum/overmap/outpost/outpost = ship.docked_to
 			if(!istype(outpost) || mission.source_outpost != outpost) // important to check these to prevent href fuckery
 				return
 			if(!mission.accepted)
-				if(LAZYLEN(ship.missions) >= ship.max_missions)
+				if(LAZYLEN(mission_handler.missions) >= mission_handler.max_missions)
 					return
-				mission.accept(ship, loc)
+				mission.accept(mission_handler, loc)
 				return TRUE
-			else if(mission.servant == ship)
+			else if(mission.servant == mission_handler)
 				if(mission.can_complete())
 					mission.turn_in()
 				else if(tgui_alert(usr, "Give up on [mission]?", src, list("Yes", "No")) == "Yes")
@@ -189,7 +190,7 @@
 	else if(issilicon(user))
 		name = user.real_name
 		rank = "Silicon"
-	var/datum/supply_order/SO = new(pack, name, rank, user.ckey, "", ordering_outpost = current_ship.docked_to)
+	var/datum/supply_order/SO = new(pack, name, rank, user.ckey, "", ordering_outpost = current_handler.current_outpost)
 	var/obj/hangar_crate_spawner/crate_spawner = return_crate_spawner()
 	crate_spawner.handle_order(SO)
 	update_appearance() // ??????????????????
@@ -205,7 +206,7 @@
 	else if(issilicon(user))
 		name = user.real_name
 		rank = "Silicon"
-	var/datum/supply_order/combo/SO = new(combo_packs, name, rank, user.ckey, "", ordering_outpost = current_ship.docked_to)
+	var/datum/supply_order/combo/SO = new(combo_packs, name, rank, user.ckey, "", ordering_outpost = current_handler.current_outpost)
 	var/obj/hangar_crate_spawner/crate_spawner = return_crate_spawner()
 	crate_spawner.handle_order(SO)
 	update_appearance() // ??????????????????
@@ -223,7 +224,7 @@
 		port = current_area.mobile_port
 	if(!port)
 		return
-	charge_account = port.current_ship.ship_account
+	charge_account = port.current_ship?.spawnable_handler.ship_account
 
 /obj/machinery/computer/cargo/attackby(obj/item/W, mob/living/user, params)
 	var/value = W.get_item_credit_value()
@@ -237,10 +238,10 @@
 /obj/machinery/computer/cargo/proc/generate_pack_data()
 	supply_pack_data = list()
 
-	if(!current_ship.docked_to)
+	if(!current_handler.current_outpost)
 		return supply_pack_data
 
-	var/datum/overmap/outpost/outpost_docked = current_ship.docked_to
+	var/datum/overmap/outpost/outpost_docked = current_handler.current_outpost
 
 	if(!istype(outpost_docked))
 		return supply_pack_data
@@ -253,7 +254,7 @@
 			)
 		if((current_pack.hidden))
 			continue
-		var/same_faction = current_pack.faction ? current_pack.faction.allowed_faction(current_ship.source_template.faction) : FALSE
+		var/same_faction = current_pack.faction ? current_pack.faction.allowed_faction(current_handler.faction) : FALSE
 		var/discountedcost = (same_faction && current_pack.faction_discount) ? current_pack.cost - (current_pack.cost * (current_pack.faction_discount * 0.01)) : null
 		if(current_pack.faction_locked && !same_faction)
 			continue
@@ -271,7 +272,11 @@
 
 /obj/machinery/computer/cargo/proc/return_crate_spawner()
 	var/obj/hangar_crate_spawner/spawner
-	spawner = current_ship.shuttle_port.docked.crate_spawner
+	/// OUTPOSTS TODO: Redo this so it can actually handle outposts
+	var/datum/overmap/ship/controlled/shippy = current_handler.parent
+	if(!istype(shippy))
+		return null
+	spawner = shippy.shuttle_port.docked.crate_spawner
 	return spawner
 
 /obj/machinery/computer/cargo/retro

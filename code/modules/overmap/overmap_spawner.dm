@@ -59,6 +59,8 @@
 	var/list/job_slots_default = list()
 	/// List of people currently spawned in/working in the location
 	var/list/manifest = list()
+	///Whether objects here require an ID with access granted
+	var/unique_access = FALSE
 	///Time that next job slot change can occur
 	COOLDOWN_DECLARE(job_slot_adjustment_cooldown)
 
@@ -82,6 +84,10 @@
 	/// The maximum number of currently active missions that a ship may take on.
 	var/max_missions = 2
 
+	/// The outpost we are either docked to or currently using as a source of supplies.
+	/// This is not great, refactor this into something less type-bound later maybe?
+	var/datum/overmap/outpost/current_outpost
+
 	///List of spawn points on the location
 	var/list/atom/spawn_points = list()
 
@@ -95,8 +101,7 @@
 	. = ..()
 	if(location_type == OVERMAP_SHIP)
 		SSovermap.controlled_ships -= parent
-	else // If you ever add more specific types, redo this into a switch
-		SSovermap.controlled_others -= parent // OUTPOSTS TODO: This list needs work
+	SSovermap.controlled_locations -= parent // OUTPOSTS TODO: This list needs work
 
 	QDEL_LIST(missions)
 	LAZYCLEARLIST(owner_candidates)

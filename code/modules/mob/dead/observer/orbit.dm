@@ -242,7 +242,7 @@
 		if(helm_poi.current_ship)
 			var/datum/overmap/ship/controlled/helm_ship = helm_poi.current_ship
 			misc["full_name"] = helm_ship.name
-			misc["extra"] = "Crew Size: [length(helm_ship.manifest)]"
+			misc["extra"] = "Crew Size: [length(helm_ship.spawnable_handler.manifest)]"
 
 		return list(misc, critical)
 

@@ -204,7 +204,7 @@ GLOBAL_VAR_INIT(time_last_changed_position, 0)
 				Target: <a href='?src=[REF(src)];choice=inserted_modify_id'>Remove [target_name]</a> ||
 				Confirm Identity: <a href='?src=[REF(src)];choice=inserted_scan_id'>Remove [scan_name]</a><br>
 				<a href='?src=[REF(src)];choice=mode;mode_target=1'>Access Crew Manifest</a><br>
-				Unique Ship Access: [ship.unique_ship_access?"Enabled":"Disabled"] <a href='?src=[REF(src)];choice=toggle_unique_ship_access'>[ship.unique_ship_access?"Disable":"Enable"]</a><br>
+				Unique Ship Access: [ship.spawnable_handler.unique_access?"Enabled":"Disabled"] <a href='?src=[REF(src)];choice=toggle_unique_ship_access'>[ship.spawnable_handler.unique_access?"Disable":"Enable"]</a><br>
 				Print Silicon Access Chip <a href='?src=[REF(src)];choice=print_silicon_access_chip'>Print</a></div>
 				<a href='?src=[REF(src)];choice=logout'>Log Out</a></div>"}
 
@@ -383,7 +383,7 @@ GLOBAL_VAR_INIT(time_last_changed_position, 0)
 		if ( "toggle_unique_ship_access" )
 			if (authenticated == AUTHENTICATED_ALL)
 				var/datum/overmap/ship/controlled/ship = SSshuttle.get_ship(src)
-				ship.unique_ship_access = !ship.unique_ship_access
+				ship.spawnable_handler.unique_access = !ship.spawnable_handler.unique_access
 				playsound(src, "terminal_type", 50, FALSE)
 
 		if ( "print_silicon_access_chip" )

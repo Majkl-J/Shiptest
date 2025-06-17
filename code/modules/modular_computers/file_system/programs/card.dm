@@ -25,7 +25,7 @@
 	var/target_dept
 
 	// Can only get defined on stationary console altough you can carry it away if you yoink the hard drive or copy the file
-	var/datum/overmap/ship/controlled/ship
+	var/datum/overmap_spawnable/location_handler
 
 	//For some reason everything was exploding if this was static.
 	var/list/sub_managers
@@ -36,13 +36,13 @@
 	. = ..()
 	if (!.)
 		return 0
-	if (computer.req_ship_access && !ship)
-		ship = SSshuttle.get_ship(computer) // get it once and never again
+	if (computer.req_ship_access && isnull(location_handler))
+		location_handler = SSshuttle.get_ship(computer) // get it once and never again
 	return 1
 
 /datum/computer_file/program/card_mod/clone()
 	var/datum/computer_file/program/card_mod/temp = ..()
-	temp.ship = ship
+	temp.location_handler = location_handler
 	return temp
 
 /datum/computer_file/program/card_mod/New(obj/item/modular_computer/comp)
@@ -79,7 +79,7 @@
 	if(!id_card)
 		return
 
-	if (ship?.unique_ship_access && !(id_card?.has_ship_access(ship)))
+	if (location_handler?.unique_access && !(id_card?.has_ship_access(location_handler)))
 		return FALSE
 
 	region_access = list()
@@ -213,8 +213,8 @@
 				var/list/new_access = list()
 				if(is_centcom)
 					new_access = get_centcom_access(target)
-				else if(ship)
-					for (var/datum/job/J in ship.job_slots)
+				else if(location_handler)
+					for (var/datum/job/J in location_handler.job_slots)
 						if(J.name == target)
 							new_access = J.get_access()
 							break
@@ -249,38 +249,38 @@
 				playsound(computer, "terminal_type", 50, FALSE)
 				return TRUE
 		if ( "PRG_grantship" )
-			if(!computer || !authenticated || !ship)
+			if(!computer || !authenticated || isnull(location_handler))
 				return
-			id_card.add_ship_access(ship)
+			id_card.add_ship_access(location_handler)
 			playsound(computer, 'sound/machines/terminal_prompt_confirm.ogg', 50, FALSE)
 			return TRUE
 		if ( "PRG_denyship" )
-			if(!computer || !authenticated || !ship)
+			if(!computer || !authenticated || isnull(location_handler))
 				return
-			id_card.remove_ship_access(ship)
+			id_card.remove_ship_access(location_handler)
 			playsound(computer, 'sound/machines/terminal_prompt_deny.ogg', 50, FALSE)
 			return TRUE
 		if ( "PRG_enableuniqueaccess" )
-			if(!computer || !authenticated || !ship)
+			if(!computer || !authenticated || isnull(location_handler))
 				return
-			ship.unique_ship_access = TRUE
+			location_handler.unique_access = TRUE
 			playsound(computer, 'sound/machines/terminal_prompt_confirm.ogg', 50, FALSE)
 			return TRUE
 		if ( "PRG_disableuniqueaccess" )
-			if(!computer || !authenticated || !ship)
+			if(!computer || !authenticated || isnull(location_handler))
 				return
-			ship.unique_ship_access = FALSE
+			location_handler.unique_access = FALSE
 			playsound(computer, 'sound/machines/terminal_prompt_deny.ogg', 50, FALSE)
 			return TRUE
 		if ( "PRG_printsiliconaccess" )
-			if(!computer || !authenticated || !ship)
+			if(!computer || !authenticated || isnull(location_handler))
 				return
 			if(!COOLDOWN_FINISHED(src, silicon_access_print_cooldown))
 				computer.say("Printer unavailable. Please allow a short time before attempting to print.")
 				return
-			if (ship)
+			if (location_handler)
 				var/obj/item/borg/upgrade/ship_access_chip/chip = new(get_turf(computer))
-				chip.ship = ship
+				chip.ship = location_handler
 				COOLDOWN_START(src, silicon_access_print_cooldown, 10 SECONDS)
 			playsound(computer, 'sound/machines/terminal_prompt_confirm.ogg', 50, FALSE)
 			return TRUE
@@ -330,9 +330,9 @@
 	var/list/departments = target_dept
 	if(is_centcom)
 		departments = list("CentCom" = get_all_centcom_jobs())
-	else if(ship)
+	else if(location_handler)
 		var/jobs = list()
-		for (var/datum/job/job in ship.job_slots)
+		for (var/datum/job/job in location_handler.job_slots)
 			jobs += job.name
 		departments = list("Jobs" = jobs)
 	else if(isnull(departments))
@@ -413,10 +413,10 @@
 			data["access_on_card"] = id_card.access
 
 		if (id_card)
-			data[ "id_has_ship_access" ] = id_card.has_ship_access(ship)
-		if (ship)
+			data[ "id_has_ship_access" ] = id_card.has_ship_access(location_handler)
+		if (location_handler)
 			data[ "has_ship" ] = 1
-			data[ "ship_has_unique_access" ] = ship.unique_ship_access
+			data[ "ship_has_unique_access" ] = location_handler.unique_access
 
 	return data
 

@@ -19,10 +19,10 @@
 	creds_won = cubic_random(100, 10000)
 
 /datum/round_event/ship/lottery/start()
-	if(!target_ship)
+	if(isnull(target_ship) || isnull(target_ship.spawnable_handler))
 		return
-	if(target_ship.ship_account)
-		target_ship.ship_account.adjust_money(creds_won, "deposit")
+	if(target_ship.spawnable_handler.ship_account)
+		target_ship.spawnable_handler.ship_account.adjust_money(creds_won, "deposit")
 
 /datum/round_event/ship/lottery/announce(fake)
 	if(fake)

@@ -274,7 +274,7 @@
 	.["isViewer"] = viewer || (!allow_ai_control && issilicon(user))
 	.["mapRef"] = current_ship.token.map_name
 	.["shipInfo"] = list(
-		name = current_ship.real_name,
+		name = current_ship.spawnable_handler.real_name,
 		prefixed = current_ship.name,
 		class = current_ship.source_template.name,
 		mass = current_ship.shuttle_port.turf_count,
@@ -301,7 +301,7 @@
 			if(!new_name)
 				return
 			new_name = trim(new_name)
-			if (!length(new_name) || new_name == current_ship.real_name)
+			if (!length(new_name) || new_name == current_ship.spawnable_handler.real_name)
 				return
 			if(!reject_bad_text(new_name, MAX_CHARTER_LEN) || CHAT_FILTER_CHECK(new_name))
 				say("Error: Replacement designation rejected by system.")

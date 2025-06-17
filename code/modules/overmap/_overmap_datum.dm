@@ -60,6 +60,7 @@
 	/// The 'death time' of the object. Used for limited lifespan events.
 	var/death_time
 
+
 /datum/overmap/New(position, datum/overmap_star_system/system_spawned_in, ...)
 	SHOULD_NOT_OVERRIDE(TRUE) // Use [/datum/overmap/proc/Initialize] instead.
 	current_overmap = system_spawned_in

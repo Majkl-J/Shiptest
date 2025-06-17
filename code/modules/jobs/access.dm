@@ -74,7 +74,7 @@
 	if (!req_ship_access)
 		return TRUE
 
-	if (!(ship?.unique_ship_access))
+	if (!(ship?.spawnable_handler?.unique_access))
 		return TRUE
 
 // Check if an item has access to this object

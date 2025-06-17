@@ -21,8 +21,6 @@
 	VAR_FINAL/obj/docking_port/mobile/shuttle_port
 	///The map template the shuttle was spawned from, if it was indeed created from a template.
 	var/datum/map_template/shuttle/source_template
-	///Whether objects on the ship require an ID with ship access granted
-	var/unique_ship_access = FALSE
 
 	/// The shipkey for this ship
 	var/obj/item/key/ship/shipkey
@@ -40,7 +38,7 @@
 	///The cooldown for events hitting this ship. Generally used by events with a big consquence and fires slower than normal, like flares
 	COOLDOWN_DECLARE(event_cooldown)
 
-/datum/overmap/ship/controlled/Rename(new_name, force = FALSE)
+/datum/overmap/ship/controlled/Rename(new_name, force = FALSE) // OUTPOSTS TODO: Migrate to handler
 	var/old_name = name
 	var/full_name = "[source_template.prefix] [new_name]"
 	if(!force && !COOLDOWN_FINISHED(src, rename_cooldown) || !..(full_name, force))
@@ -50,9 +48,9 @@
 	log_admin("[key_name(src)] has renamed vessel '[old_name]' to '[full_name]'")
 	SSblackbox.record_feedback("text", "ship_renames", 1, full_name)
 
-	real_name = new_name
+	spawnable_handler.real_name = new_name
 	shuttle_port?.name = full_name
-	ship_account.account_holder = full_name
+	spawnable_handler.ship_account.account_holder = full_name // This feels wrong
 
 	if(shipkey)
 		shipkey.name = "ship key ([full_name])"
@@ -79,8 +77,7 @@
 	. = ..()
 	if(creation_template)
 		source_template = creation_template
-		unique_ship_access = source_template.unique_ship_access
-		job_slots = source_template.job_slots?.Copy()
+		spawnable_handler = create_spawner(name, source_template.job_slots?.Copy(), source_template.faction, null, OVERMAP_SHIP)
 		stationary_icon_state = creation_template.token_icon_state
 		alter_token_appearance()
 		if(create_shuttle)
@@ -93,8 +90,7 @@
 				Dock(position, force = TRUE)
 
 			refresh_engines()
-		ship_account = new(name, source_template.starting_funds)
-
+		spawnable_handler.ship_account = new(name, source_template.starting_funds)
 	else
 		stack_trace("Attempted to create a controlled ship without a template!")
 		source_template = new(rename = "Overmap Object [length(SSovermap.overmap_objects)]")

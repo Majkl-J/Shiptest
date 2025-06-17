@@ -22,7 +22,7 @@
 
 /obj/machinery/computer/bank_machine/connect_to_shuttle(obj/docking_port/mobile/port, obj/docking_port/stationary/dock)
 	. = ..()
-	ship_account_ref = WEAKREF(port.current_ship.ship_account)
+	ship_account_ref = WEAKREF(port.current_ship.spawnable_handler.ship_account)
 
 /obj/machinery/computer/bank_machine/Destroy()
 	QDEL_NULL(radio)
