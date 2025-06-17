@@ -115,7 +115,7 @@
 			var/datum/overmap/ship/controlled/target = SSovermap.spawn_ship_at_start(template, ship_loc, selected_system)
 			var/datum/overmap_spawnable/handler = target.spawnable_handler
 
-			if(isnull(target) || !target.shuttle_port || isnull(target.spawnable_handler))
+			if(isnull(target) || !target.shuttle_port || isnull(handler))
 				to_chat(spawnee, span_danger("There was an error loading the ship. Please contact admins!"))
 				spawnee.new_player_panel()
 				return
@@ -123,7 +123,7 @@
 			SSblackbox.record_feedback("tally", "faction_ship_purchased", 1, template.faction.name)
 			// Try to spawn as the first listed job in the job slots (usually captain)
 			// Playtime checks are overridden, to ensure the player gets to join the ship they spawned.
-			if(!spawnee.AttemptLateSpawn(handler.job_slots[1], target, FALSE))
+			if(!spawnee.AttemptLateSpawn(handler.job_slots[1], handler, FALSE))
 				to_chat(spawnee, span_danger("Ship spawned, but you were unable to be spawned. You can likely try to spawn in the ship through joining normally, but if not, please contact an admin."))
 				spawnee.new_player_panel()
 

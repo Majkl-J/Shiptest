@@ -14,7 +14,8 @@
 	if(spawnable_handler)
 		QDEL_NULL(spawnable_handler)
 
-	spawnable_handler = new spawnable_handler(name, job_slots, faction, new_type)
+	spawnable_handler = new(name, job_slots, faction, new_type)
+	spawnable_handler.parent = src
 
 	if(spawn_points && length(spawn_points))
 		spawnable_handler.add_spawn_points(spawn_points)

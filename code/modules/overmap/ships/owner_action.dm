@@ -16,7 +16,7 @@
 
 // called in /datum/action/New(). the base implementation thinks it's dealing with an obj, but fuck that
 /datum/action/ship_owner/link_to(datum/overmap_spawnable/_target)
-	if(!istype(_target, /datum/overmap/ship/controlled))
+	if(!istype(_target, /datum/overmap_spawnable))
 		CRASH("Ship owner action [REF(src)] given invalid target [_target.type] [_target] ([REF(_target)])!")
 	parent = _target
 
